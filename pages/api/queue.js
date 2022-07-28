@@ -26,9 +26,6 @@ export default async function handler(req, res) {
         }
       });
     if (isAuthenticated) {
-      // await db
-      //   .collection("queue")
-      //   .
       let alreadyInQueue = true;
       await db
         .collection("queue")
@@ -97,17 +94,19 @@ export default async function handler(req, res) {
             });
         });
       let otherUserId = "";
-      let eloo;
+      let eloo, p1play, p2play, p1pit, p2pit;
       await db
         .collection("account")
         .findOne({ _id: ObjectId(token) })
         .then((b) => {
           eloo = b.elo;
+          p1play = b.lineup;
+          p1pit = b.currPitcher;
         });
       await db
         .collection("queue")
         .find()
-        .forEach((u) => {
+        .forEach(async (u) => {
           // match if elo is within three ranks and rankedType is same
           if (
             u.uid != token &&
@@ -117,6 +116,13 @@ export default async function handler(req, res) {
           ) {
             // found match, remove both from queue, create game, add to currentMatch, and start game
             otherUserId = u.uid;
+            await db
+              .collection("account")
+              .findOne({ _id: ObjectId(u.uid) })
+              .then((b) => {
+                p2play = b.lineup;
+                p2pit = b.currPitcher;
+              });
           }
         });
       if (otherUserId != "") {
@@ -137,6 +143,13 @@ export default async function handler(req, res) {
               p2runs: 0,
               currentPitcherPower: 0,
               currentBattingOrder: 0,
+              manFirst: false,
+              manSecond: false,
+              manThird: false,
+              p1batters: p1play,
+              p2batters: p2play,
+              p1pitcher: p1pit,
+              p2pitcher: p2pit,
             })
             .then((a) => {
               insId = a.insertedId;
@@ -155,6 +168,13 @@ export default async function handler(req, res) {
               p2runs: 0,
               currentPitcherPower: 0,
               currentBattingOrder: 0,
+              manFirst: false,
+              manSecond: false,
+              manThird: false,
+              p1batters: p1play,
+              p2batters: p2play,
+              p1pitcher: p1pit,
+              p2pitcher: p2pit,
             })
             .then((a) => {
               insId = a.insertedId;

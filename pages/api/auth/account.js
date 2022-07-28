@@ -53,7 +53,31 @@ export default async function handler(req, res) {
           elo: 0,
           username: req.body.username,
           friends: [],
-          players: [{ position: "P", name: "Mark", pitchCom: 10, fieldCom: 0 }],
+          players: [
+            {
+              position: "P",
+              name: "Mark",
+              pitchCom: 10,
+              fieldCom: 10,
+              strength: 10,
+            },
+          ],
+          lineup: [
+            {
+              position: "P",
+              name: "Mark",
+              pitchCom: 10,
+              fieldCom: 10,
+              strength: 10,
+            },
+          ],
+          currPitcher: {
+            position: "P",
+            name: "Mark",
+            pitchCom: 10,
+            fieldCom: 10,
+            strength: 10,
+          },
           matchHistory: [],
           exp: 1000,
           tickets: 100,
