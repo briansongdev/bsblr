@@ -1,6 +1,7 @@
 import "../styles.css";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { SessionProvider } from "next-auth/react";
+import Head from "next/head";
 
 const theme = createTheme({
   typography: {
@@ -23,6 +24,10 @@ const theme = createTheme({
 function MyApp({ Component, pageProps }) {
   return (
     <>
+      {" "}
+      <Head>
+        <link rel="shortcut icon" href="/favicon.ico" />
+      </Head>
       <SessionProvider session={pageProps.session}>
         <ThemeProvider theme={theme}>
           <Component {...pageProps} />

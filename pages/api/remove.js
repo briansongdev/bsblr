@@ -28,8 +28,9 @@ export default async function handler(req, res) {
     if (isAuthenticated) {
       await db.collection("queue").deleteOne({ uid: req.body.uid });
       res.json({ success: true });
+    } else {
+      res.json({ success: false });
     }
-    res.json({ success: false });
   } else {
     res.json({ success: false });
   }

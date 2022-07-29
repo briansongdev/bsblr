@@ -69,23 +69,23 @@ const ranks = [
   },
   {
     name: "PRISMATIC",
-    color: "",
+    color: "#a890fe",
   },
   {
     name: "SHIMMERING",
-    color: "",
+    color: "#ea8d8d",
   },
 ];
 
 const images = [
   {
     url: "mainbaseball.jpg",
-    title: "Start an unranked match",
+    title: "Search for an unranked match",
     width: "100%",
   },
   {
     url: "compbaseball.jpg",
-    title: "Start a ranked match",
+    title: "Search for a ranked match",
     width: "100%",
   },
 ];
@@ -182,7 +182,7 @@ export default function Home({ isConnected }) {
   };
 
   const refreshForMatchUnranked = () => {
-    setTimeout(async () => {
+    const checkI = setTimeout(async () => {
       await axios
         .get("/api/queue", {
           headers: {
@@ -203,12 +203,24 @@ export default function Home({ isConnected }) {
   };
 
   const refreshForMatchRanked = async () => {
-    await axios.get("/api/queue", {
-      headers: {
-        uid: session.user.name,
-        ranked: false,
-      },
-    });
+    const checkI = setTimeout(async () => {
+      await axios
+        .get("/api/queue", {
+          headers: {
+            uid: session.user.name,
+            ranked: true,
+          },
+        })
+        .then((res) => {
+          if (res.data.success) {
+            if (res.data.message == "Game has started.") {
+              router.push("/game");
+            }
+          } else {
+            alert("Problem getting data. Please refresh and try again.");
+          }
+        });
+    }, 1000);
   };
 
   const loading = status === "loading";
@@ -231,22 +243,92 @@ export default function Home({ isConnected }) {
     });
   }, [session]);
   if (loading) {
-    return <p>Loading...</p>;
-  } else if (!session && !loading && isLoading) {
     return (
-      <div className="container">
+      <>
         <Head>
           <title>BSBLR</title>
         </Head>
-
-        <h1 className="title">
-          Welcome to <a href="https://nextjs.org">Next.js with MongoDB!</a>
-        </h1>
-        <Link href="/login">Login here</Link>
-      </div>
+        <Container>
+          {" "}
+          <Typography variant="h3">BSBLR</Typography>
+        </Container>
+      </>
+    );
+  } else if (!session && !loading && isLoading) {
+    return (
+      <>
+        {" "}
+        <Head>
+          <title>BSBLR</title>
+        </Head>
+        <Container>
+          <Typography variant="h3">BSBLR</Typography>
+          <Grid
+            container
+            direction="column"
+            justifyContent="center"
+            alignItems="center"
+            sx={{ mt: 2 }}
+            spacing={2}
+          >
+            <Grid item>
+              <Typography variant="h4">Up for a little baseball?</Typography>
+            </Grid>
+            <Grid item>
+              <Typography variant="h5">
+                The first-ever browser interactive PvP baseball game.
+              </Typography>
+            </Grid>
+            <Grid item>
+              <Typography color="text.secondary">Easy to learn.</Typography>
+            </Grid>
+            <Grid item>
+              <Typography color="text.secondary">
+                Engaging and realistic, with full 9-inning games.
+              </Typography>
+            </Grid>
+            <Grid item>
+              <Typography color="text.secondary">
+                Competitive, with ranks to climb and recognitions to reap.
+              </Typography>
+            </Grid>
+            <Grid item>
+              <Typography variant="h5">Play ball!</Typography>
+            </Grid>
+            <Grid item>
+              <Grid
+                container
+                direction="row"
+                justifyContent="space-around"
+                alignItems="center"
+                spacing={3}
+              >
+                <Grid item>
+                  <Button
+                    variant="contained"
+                    style={{ width: "200px" }}
+                    onClick={() => router.push("/signup")}
+                  >
+                    Signup
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button
+                    variant="outlined"
+                    style={{ width: "200px" }}
+                    onClick={() => router.push("/login")}
+                  >
+                    Login
+                  </Button>
+                </Grid>
+              </Grid>
+            </Grid>
+          </Grid>
+        </Container>
+      </>
     );
   }
-  if (session && !isLoading) {
+  if (session && !isLoading && userInfo) {
     return (
       <>
         <Head>
@@ -258,7 +340,7 @@ export default function Home({ isConnected }) {
             container
             direction="row"
             justifyContent="center"
-            alignItems="center"
+            alignItems="flex-start"
             sx={{ mt: 2 }}
           >
             <Grid item xs={3}>
@@ -280,7 +362,7 @@ export default function Home({ isConnected }) {
                         {userInfo.username}
                       </Typography>
                       <Typography variant="body2">
-                        Level: {userInfo.exp / 1000}
+                        Level: {Math.floor(userInfo.exp / 1000)}
                       </Typography>
                       <BorderLinearProgress
                         variant="determinate"
@@ -309,22 +391,15 @@ export default function Home({ isConnected }) {
                       </Typography>
                     </CardContent>
                     <CardActions>
-                      <ButtonGroup
-                        orientation="vertical"
-                        variant="text"
-                        sx={{ width: "100%" }}
+                      <Button size="small">Manage Players</Button>
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          signOut();
+                        }}
                       >
-                        <Button size="small">View My Players</Button>
-                        <Button size="small">View career</Button>
-                        <Button
-                          size="small"
-                          onClick={() => {
-                            signOut();
-                          }}
-                        >
-                          Sign out
-                        </Button>
-                      </ButtonGroup>
+                        Sign out
+                      </Button>
                     </CardActions>
                   </Card>
                 </Grid>
@@ -421,7 +496,9 @@ export default function Home({ isConnected }) {
                   </Typography>
                 </Grid>
                 <Grid item>
-                  <Typography variant="overline">Current Rank</Typography>
+                  <Typography variant="overline">
+                    Current Competitive Rank
+                  </Typography>
                 </Grid>
               </Grid>
               <Typography
@@ -437,6 +514,14 @@ export default function Home({ isConnected }) {
               </Typography>
               <BorderLinearProgress
                 variant="determinate"
+                sx={{
+                  "& .MuiLinearProgress-bar1Determinate": {
+                    backgroundColor:
+                      ranks[Math.floor(userInfo.elo / 200)] != undefined
+                        ? ranks[Math.floor(userInfo.elo / 200)].color
+                        : "green",
+                  },
+                }}
                 value={(userInfo.elo / 2) % 100}
               />
               <Box
@@ -518,6 +603,24 @@ export default function Home({ isConnected }) {
                     width: images[1].width,
                     borderRadius: "15px",
                   }}
+                  onClick={async () => {
+                    await axios
+                      .post("/api/queue", {
+                        email: userInfo.email,
+                        password: userInfo.password,
+                        id: session.user.name,
+                        isRanked: true,
+                        elo: userInfo.elo,
+                      })
+                      .then((u) => {
+                        if (u.data.success) {
+                          refreshForMatchRanked();
+                        } else {
+                          alert("Error. Please try again.");
+                        }
+                      });
+                    setOpen(true);
+                  }}
                 >
                   <ImageSrc
                     style={{
@@ -577,17 +680,80 @@ export default function Home({ isConnected }) {
                         component="div"
                         color="text.secondary"
                       >
+                        My Match History
+                      </Typography>
+                      {userInfo.matchHistory
+                        .slice()
+                        .reverse()
+                        .map((el) => {
+                          if (el.eloChange == 0) {
+                            if (el.winner == session.user.name) {
+                              return (
+                                <Typography>
+                                  Unranked: {el.p1Score} - {el.p2Score}
+                                </Typography>
+                              );
+                            } else {
+                              return (
+                                <Typography>
+                                  Unranked: {el.p2Score} - {el.p1Score}
+                                </Typography>
+                              );
+                            }
+                          } else {
+                            if (el.eloChange < 0) {
+                              if (el.p1Score > el.p2Score) {
+                                return (
+                                  <Typography>
+                                    Ranked: {el.p2Score} - {el.p1Score} (-
+                                    {Math.abs(el.eloChange)} rating)
+                                  </Typography>
+                                );
+                              } else {
+                                return (
+                                  <Typography>
+                                    Ranked: {el.p1Score} - {el.p2Score} (-
+                                    {Math.abs(el.eloChange)} rating)
+                                  </Typography>
+                                );
+                              }
+                            } else {
+                              if (el.p1Score > el.p2Score) {
+                                return (
+                                  <Typography>
+                                    Ranked: {el.p1Score} - {el.p2Score} (+
+                                    {el.eloChange} rating)
+                                  </Typography>
+                                );
+                              } else {
+                                return (
+                                  <Typography>
+                                    Ranked: {el.p2Score} - {el.p1Score} (+
+                                    {el.eloChange} rating)
+                                  </Typography>
+                                );
+                              }
+                            }
+                          }
+                        })}
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item>
+                  <Card style={{ width: "15vw" }} variant="outlined">
+                    {" "}
+                    <CardContent>
+                      <Typography
+                        variant="h5"
+                        component="div"
+                        color="text.secondary"
+                      >
                         Leaderboard
                       </Typography>
                       <Typography variant="body2">
-                        well meaning and kindly.
-                        <br />
-                        {'"a benevolent smile"'}
+                        Coming out soon, as more players join.
                       </Typography>{" "}
                     </CardContent>
-                    <CardActions>
-                      <Button size="small">Learn More</Button>
-                    </CardActions>
                   </Card>
                 </Grid>
               </Grid>
@@ -601,8 +767,8 @@ export default function Home({ isConnected }) {
           >
             <CircularProgress color="success" />
             <DialogContentText>
-              You will be matched with someone with similar rank. Please stand
-              by.
+              You will be matched with someone with similar rank, if you are
+              queueing for ranked play.
             </DialogContentText>
           </DialogContent>
           <DialogActions>

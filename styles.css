@@ -4,3 +4,10 @@ h1 {
   font-family: "ibm-plex-sans";
   font-weight: 300;
 }
+#vibrantIcon {
+  background: -webkit-linear-gradient(#deff00, #e000ff);
+  background: -moz-linear-gradient(#deff00, #e000ff);
+  background: linear-gradient(#deff00, #e000ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
