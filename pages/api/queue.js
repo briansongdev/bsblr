@@ -156,7 +156,7 @@ export default async function handler(req, res) {
                 p2batters: p2play,
                 p1pitcher: p1pit,
                 p2pitcher: p2pit,
-                countdown: 0,
+                countdown: -1,
                 balls: 0,
                 strikes: 0,
                 pastFewPitches: [],

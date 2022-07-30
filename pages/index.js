@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import axios from "axios";
 import CancelIcon from "@mui/icons-material/Cancel";
 import SportsBaseballIcon from "@mui/icons-material/SportsBaseball";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ButtonBase from "@mui/material/ButtonBase";
 import { styled } from "@mui/material/styles";
 import {
@@ -28,6 +29,8 @@ import {
   DialogContentText,
   DialogActions,
   CircularProgress,
+  TextField,
+  Tooltip,
 } from "@mui/material";
 import LinearProgress, {
   linearProgressClasses,
@@ -73,7 +76,7 @@ const ranks = [
   },
   {
     name: "SHIMMERING",
-    color: "#ea8d8d",
+    color: "highRankIcon",
   },
 ];
 
@@ -159,7 +162,9 @@ export default function Home({ isConnected }) {
   const { data: session, status } = useSession();
   const [userInfo, setUserInfo] = useState({});
   const [isLoading, setLoading] = useState(true);
+  const [addFriendVal, setFriendVal] = useState("");
   const [open, setOpen] = useState(false);
+  const [open1, setOpen1] = useState(false);
   const handleClose = async () => {
     setOpen(false);
     await axios
@@ -179,6 +184,47 @@ export default function Home({ isConnected }) {
           router.push("/game");
         }
       });
+  };
+  const handleClose1 = async () => {
+    setOpen1(false);
+    await axios
+      .get("/api/auth/account", {
+        headers: {
+          uid: session.user.name,
+        },
+      })
+      .then(async (res) => {
+        if (res.data.currentMatch == "") {
+          await axios.post("/api/remove", {
+            email: userInfo.email,
+            password: userInfo.password,
+            uid: session.user.name,
+          });
+        } else {
+          router.push("/game");
+        }
+      });
+  };
+
+  const refreshForMatchFriend = (friendToken) => {
+    const checkI = setTimeout(async () => {
+      await axios
+        .get("/api/friendQueue", {
+          headers: {
+            uid: session.user.name,
+            friendid: friendToken,
+          },
+        })
+        .then((res) => {
+          if (res.data.success) {
+            if (res.data.message == "Game has started.") {
+              router.push("/game");
+            }
+          } else {
+            alert("Problem getting data. Please refresh and try again.");
+          }
+        });
+    }, 1000);
   };
 
   const refreshForMatchUnranked = () => {
@@ -373,16 +419,18 @@ export default function Home({ isConnected }) {
                       </Typography>
                       <Typography variant="body2">
                         Joined:{" "}
-                        {Math.round(
+                        {Math.ceil(
                           (new Date(moment().format()).getTime() -
                             new Date(userInfo.createdOn).getTime()) /
                             (1000 * 60 * 60 * 24)
                         )}{" "}
-                        {!Math.round(
-                          (new Date(moment().format()).getTime() -
-                            new Date(userInfo.createdOn).getTime()) /
-                            (1000 * 60 * 60 * 24)
-                        ) == 1 ? (
+                        {!(
+                          Math.ceil(
+                            (new Date(moment().format()).getTime() -
+                              new Date(userInfo.createdOn).getTime()) /
+                              (1000 * 60 * 60 * 24)
+                          ) == 1
+                        ) ? (
                           <>days</>
                         ) : (
                           <>day</>
@@ -407,10 +455,6 @@ export default function Home({ isConnected }) {
                   <Card style={{ width: "15vw" }} variant="outlined">
                     {" "}
                     <CardContent>
-                      <Typography sx={{ fontSize: 14 }} color="text.secondary">
-                        Start a Friendly Game
-                      </Typography>
-                      <Typography variant="h5" component="div"></Typography>
                       <Typography
                         sx={{ mb: 0.5 }}
                         variant="h6"
@@ -419,11 +463,69 @@ export default function Home({ isConnected }) {
                         Friend List
                       </Typography>
                       <List>
+                        {userInfo.friendReqs != undefined &&
+                        userInfo.friendReqs.length != 0 ? (
+                          <Typography color="text.secondary">
+                            Requests
+                          </Typography>
+                        ) : (
+                          <></>
+                        )}
+                        {userInfo.friendReqs != undefined &&
+                          userInfo.friendReqs.map((d) => {
+                            return (
+                              <ListItem
+                                disablePadding
+                                secondaryAction={
+                                  <>
+                                    <IconButton edge="end">
+                                      <CheckCircleIcon
+                                        color="primary"
+                                        onClick={async () => {
+                                          await axios
+                                            .post("/api/friend", {
+                                              email: userInfo.email,
+                                              password: userInfo.password,
+                                              username: userInfo.username,
+                                              friendUsername: d,
+                                            })
+                                            .then((answer) => {
+                                              alert(answer.data.message);
+                                              window.location.reload();
+                                            });
+                                        }}
+                                      />
+                                    </IconButton>
+                                    <IconButton edge="end" sx={{ ml: 1.5 }}>
+                                      <CancelIcon
+                                        color="primary"
+                                        onClick={async () => {
+                                          await axios
+                                            .post("/api/removeFriend", {
+                                              email: userInfo.email,
+                                              password: userInfo.password,
+                                              username: userInfo.username,
+                                              friendUsername: d,
+                                            })
+                                            .then((answer) => {
+                                              alert(answer.data.message);
+                                              window.location.reload();
+                                            });
+                                        }}
+                                      />
+                                    </IconButton>
+                                  </>
+                                }
+                              >
+                                <ListItemText primary={d} />
+                              </ListItem>
+                            );
+                          })}
                         {userInfo.friends != undefined &&
-                        userInfo.friends.length == 0 ? (
-                          <>
-                            <Typography>No friends currently.</Typography>
-                          </>
+                        userInfo.friends.length != 0 ? (
+                          <Typography color="text.secondary">
+                            Friends
+                          </Typography>
                         ) : (
                           <></>
                         )}
@@ -434,23 +536,111 @@ export default function Home({ isConnected }) {
                                 disablePadding
                                 secondaryAction={
                                   <>
-                                    <IconButton edge="end">
-                                      <SportsBaseballIcon color="secondary" />
-                                    </IconButton>
+                                    <Tooltip
+                                      title={
+                                        "Start a friendly battle with " + d
+                                      }
+                                    >
+                                      <IconButton edge="end">
+                                        <SportsBaseballIcon
+                                          color="primary"
+                                          onClick={async () => {
+                                            await axios
+                                              .post("/api/friendQueue", {
+                                                email: userInfo.email,
+                                                password: userInfo.password,
+                                                id: session.user.name,
+                                              })
+                                              .then((u) => {
+                                                if (u.data.success) {
+                                                  refreshForMatchFriend(d);
+                                                } else {
+                                                  alert(
+                                                    "Error. Please try again."
+                                                  );
+                                                }
+                                              });
+                                            setOpen1(true);
+                                          }}
+                                        />
+                                      </IconButton>
+                                    </Tooltip>
                                     <IconButton edge="end" sx={{ ml: 1.5 }}>
-                                      <CancelIcon color="secondary" />
+                                      <CancelIcon
+                                        color="primary"
+                                        onClick={async () => {
+                                          await axios
+                                            .post("/api/removeFriend", {
+                                              email: userInfo.email,
+                                              password: userInfo.password,
+                                              username: userInfo.username,
+                                              friendUsername: d,
+                                            })
+                                            .then((answer) => {
+                                              alert(answer.data.message);
+                                              window.location.reload();
+                                            });
+                                        }}
+                                      />
                                     </IconButton>
                                   </>
                                 }
                               >
-                                <ListItemText primary={"hhi"} />
+                                <ListItemText primary={d} />
                               </ListItem>
                             );
                           })}
+                        {userInfo.friends != undefined &&
+                        userInfo.friends.length == 0 ? (
+                          <>
+                            <Typography>No friends currently.</Typography>
+                          </>
+                        ) : (
+                          <></>
+                        )}
                       </List>
                     </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item>
+                  <Card style={{ width: "15vw" }} variant="outlined">
+                    {" "}
+                    <CardContent>
+                      <Typography
+                        sx={{ fontSize: 14 }}
+                        color="text.secondary"
+                        gutterBottom
+                      >
+                        Add Friends
+                      </Typography>
+                      <TextField
+                        label="Username"
+                        value={addFriendVal}
+                        onChange={(e) => {
+                          setFriendVal(e.target.value);
+                        }}
+                      />
+                    </CardContent>
                     <CardActions>
-                      <Button size="small">Add Friends</Button>
+                      <Button
+                        size="small"
+                        disabled={addFriendVal == ""}
+                        onClick={async () => {
+                          await axios
+                            .post("/api/friend", {
+                              email: userInfo.email,
+                              password: userInfo.password,
+                              username: userInfo.username,
+                              friendUsername: addFriendVal,
+                            })
+                            .then((answer) => {
+                              alert(answer.data.message);
+                              window.location.reload();
+                            });
+                        }}
+                      >
+                        Send Request
+                      </Button>
                     </CardActions>
                   </Card>
                 </Grid>
@@ -466,14 +656,40 @@ export default function Home({ isConnected }) {
               >
                 <Grid item>
                   <Box
+                    id={
+                      ranks[
+                        Math.min(
+                          ranks.length - 1,
+                          Math.floor(userInfo.elo / 200)
+                        )
+                      ] != undefined &&
+                      ranks[
+                        Math.min(
+                          ranks.length - 1,
+                          Math.floor(userInfo.elo / 200)
+                        )
+                      ].color == "highRankIcon"
+                        ? "highRankPlaque"
+                        : ""
+                    }
                     component="img"
                     sx={{
                       height: 85,
                       borderRadius: "50%",
                       border: 10,
                       borderColor:
-                        ranks[Math.floor(userInfo.elo / 200)] != undefined
-                          ? ranks[Math.floor(userInfo.elo / 200)].color
+                        ranks[
+                          Math.min(
+                            ranks.length - 1,
+                            Math.floor(userInfo.elo / 200)
+                          )
+                        ] != undefined
+                          ? ranks[
+                              Math.min(
+                                ranks.length - 1,
+                                Math.floor(userInfo.elo / 200)
+                              )
+                            ].color
                           : "grey",
                     }}
                     src="silhouette.png"
@@ -482,16 +698,48 @@ export default function Home({ isConnected }) {
                 <Grid item>
                   {" "}
                   <Typography
-                    variant="h5"
+                    variant="h4"
+                    id={
+                      ranks[
+                        Math.min(
+                          ranks.length - 1,
+                          Math.floor(userInfo.elo / 200)
+                        )
+                      ] != undefined
+                        ? ranks[
+                            Math.min(
+                              ranks.length - 1,
+                              Math.floor(userInfo.elo / 200)
+                            )
+                          ].color
+                        : ""
+                    }
                     sx={{
                       color:
-                        ranks[Math.floor(userInfo.elo / 200)] != undefined
-                          ? ranks[Math.floor(userInfo.elo / 200)].color
+                        ranks[
+                          Math.min(
+                            ranks.length - 1,
+                            Math.floor(userInfo.elo / 200)
+                          )
+                        ] != undefined
+                          ? ranks[
+                              Math.min(
+                                ranks.length - 1,
+                                Math.floor(userInfo.elo / 200)
+                              )
+                            ].color
                           : "grey",
                     }}
                   >
-                    {ranks[Math.floor(userInfo.elo / 200)] != undefined
-                      ? ranks[Math.floor(userInfo.elo / 200)].name
+                    {ranks[
+                      Math.min(ranks.length - 1, Math.floor(userInfo.elo / 200))
+                    ] != undefined
+                      ? ranks[
+                          Math.min(
+                            ranks.length - 1,
+                            Math.floor(userInfo.elo / 200)
+                          )
+                        ].name
                       : ""}
                   </Typography>
                 </Grid>
@@ -504,26 +752,64 @@ export default function Home({ isConnected }) {
               <Typography
                 sx={{
                   color:
-                    ranks[Math.floor(userInfo.elo / 200)] != undefined
-                      ? ranks[Math.floor(userInfo.elo / 200)].color
+                    ranks[
+                      Math.min(ranks.length - 1, Math.floor(userInfo.elo / 200))
+                    ] != undefined
+                      ? ranks[
+                          Math.min(
+                            ranks.length - 1,
+                            Math.floor(userInfo.elo / 200)
+                          )
+                        ].color
                       : "grey",
                   mt: -1,
                 }}
+                id={
+                  ranks[
+                    Math.min(ranks.length - 1, Math.floor(userInfo.elo / 200))
+                  ] != undefined
+                    ? ranks[
+                        Math.min(
+                          ranks.length - 1,
+                          Math.floor(userInfo.elo / 200)
+                        )
+                      ].color
+                    : ""
+                }
               >
-                {userInfo.elo % 200}/200
+                {ranks[
+                  Math.min(ranks.length - 1, Math.floor(userInfo.elo / 200))
+                ].color == "highRankIcon"
+                  ? userInfo.elo + "/1000"
+                  : (userInfo.elo % 200) + "/200"}
               </Typography>
-              <BorderLinearProgress
-                variant="determinate"
-                sx={{
-                  "& .MuiLinearProgress-bar1Determinate": {
-                    backgroundColor:
-                      ranks[Math.floor(userInfo.elo / 200)] != undefined
-                        ? ranks[Math.floor(userInfo.elo / 200)].color
-                        : "green",
-                  },
-                }}
-                value={(userInfo.elo / 2) % 100}
-              />
+              {ranks[Math.min(ranks.length - 1, Math.floor(userInfo.elo / 200))]
+                .color == "highRankIcon" ? (
+                <></>
+              ) : (
+                <BorderLinearProgress
+                  variant="determinate"
+                  sx={{
+                    "& .MuiLinearProgress-bar1Determinate": {
+                      backgroundColor:
+                        ranks[
+                          Math.min(
+                            ranks.length - 1,
+                            Math.floor(userInfo.elo / 200)
+                          )
+                        ] != undefined
+                          ? ranks[
+                              Math.min(
+                                ranks.length - 1,
+                                Math.floor(userInfo.elo / 200)
+                              )
+                            ].color
+                          : "grey",
+                    },
+                  }}
+                  value={(userInfo.elo / 2) % 100}
+                />
+              )}
               <Box
                 sx={{
                   display: "flex",
@@ -768,11 +1054,32 @@ export default function Home({ isConnected }) {
             <CircularProgress color="success" />
             <DialogContentText>
               You will be matched with someone with similar rank, if you are
-              queueing for ranked play.
+              queueing for ranked play.{" "}
+              <Typography color="text.secondary">
+                Please don't reload or close the tab.
+              </Typography>
             </DialogContentText>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>Cancel</Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog open={open1}>
+          <DialogTitle>Waiting for friend...</DialogTitle>
+          <DialogContent
+            sx={{ textAlign: "center", justifyContent: "content" }}
+          >
+            <CircularProgress color="success" />
+            <DialogContentText>
+              Once your friend also clicks to friendly battle you, you both will
+              be matched into a game.{" "}
+              <Typography color="text.secondary">
+                Please don't reload or close the tab.
+              </Typography>
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose1}>Cancel</Button>
           </DialogActions>
         </Dialog>
       </>

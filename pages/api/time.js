@@ -23,6 +23,17 @@ export default async function handler(req, res) {
         }
       });
     if (isAuthenticated) {
+      let canAddMatch = true;
+      await db
+        .collection("account")
+        .findOne({ email: req.body.email })
+        .then((als) => {
+          for (let i = 0; i < als.matchHistory.length; i++) {
+            if (als.matchHistory[i].gameId == req.body.gameid) {
+              canAddMatch = false;
+            }
+          }
+        });
       let callBackMsg = "";
       await db
         .collection("games")
@@ -83,8 +94,103 @@ export default async function handler(req, res) {
                 }
                 if (u.outs == 3 && u.currentInning == 9) {
                   if (u.isTopInning) {
-                    if (u.p2runs >= u.p1runs) {
-                      // p2 won without bot9
+                    if (u.p2runs >= u.p1runs && canAddMatch) {
+                      let elo1,
+                        elo2,
+                        xp1,
+                        xp2,
+                        eloGain = 0,
+                        eloLoss = 0;
+                      await db
+                        .collection("account")
+                        .findOne({ _id: ObjectId(iid1) })
+                        .then((bl) => {
+                          elo1 = bl.elo;
+                          xp1 = bl.exp;
+                        });
+                      await db
+                        .collection("account")
+                        .findOne({ _id: ObjectId(iid2) })
+                        .then((bl) => {
+                          elo2 = bl.elo;
+                          xp2 = bl.exp;
+                        });
+                      if (u.isRanked) {
+                        eloGain = Math.max(
+                          30,
+                          parseInt(
+                            40 +
+                              (elo1 - elo2) * 0.1 +
+                              (u.p2runs - u.p1runs) * 0.05
+                          )
+                        );
+                        eloLoss = parseInt(
+                          50 +
+                            (elo1 - elo2) * 0.1 +
+                            (u.p2runs - u.p1runs) * 0.05
+                        );
+                        await db.collection("account").updateOne(
+                          { _id: ObjectId(iid1) },
+                          {
+                            $set: {
+                              elo: Math.max(0, elo1 - Math.max(1, eloLoss)),
+                            },
+                          }
+                        );
+                        await db.collection("account").updateOne(
+                          { _id: ObjectId(iid2) },
+                          {
+                            $set: {
+                              elo: elo2 + Math.max(0, eloGain),
+                            },
+                          }
+                        );
+                      }
+                      await db.collection("account").updateOne(
+                        { _id: ObjectId(iid1) },
+                        {
+                          $set: {
+                            exp:
+                              xp1 +
+                              10 *
+                                (u.currentPitcherPower + u.currentBattingOrder),
+                            currentMatch: "",
+                          },
+                          $addToSet: {
+                            matchHistory: {
+                              gameId: req.body.gameid,
+                              // completedOn: new Date(),
+                              p1Score: u.p1runs,
+                              p2Score: u.p2runs,
+                              eloChange: -1 * Math.max(1, eloLoss),
+                              winner: iid2,
+                            },
+                          },
+                        }
+                      );
+                      await db.collection("account").updateOne(
+                        { _id: ObjectId(iid2) },
+                        {
+                          $set: {
+                            exp:
+                              xp2 +
+                              10 *
+                                (u.currentPitcherPower + u.currentBattingOrder),
+                            currentMatch: "",
+                          },
+                          $addToSet: {
+                            matchHistory: {
+                              gameId: req.body.gameid,
+                              // completedOn: new Date(),
+                              p1Score: u.p1runs,
+                              p2Score: u.p2runs,
+                              eloChange: Math.max(0, eloGain),
+                              winner: iid2,
+                            },
+                          },
+                        }
+                      );
+                      // Delete match, add match to match history, add exp
                     } else {
                       // move to bot9
                       await db.collection("games").updateOne(
@@ -106,7 +212,7 @@ export default async function handler(req, res) {
                   }
                 }
                 if (u.currentInning == 9 && !u.isTopInning) {
-                  if (u.p2runs >= u.p1runs) {
+                  if (u.p2runs >= u.p1runs && canAddMatch) {
                     let elo1,
                       elo2,
                       xp1,
@@ -129,8 +235,13 @@ export default async function handler(req, res) {
                         xp2 = bl.exp;
                       });
                     if (u.isRanked) {
-                      eloGain = parseInt(
-                        40 + (elo1 - elo2) * 0.1 + (u.p2runs - u.p1runs) * 0.05
+                      eloGain = Math.max(
+                        30,
+                        parseInt(
+                          40 +
+                            (elo1 - elo2) * 0.1 +
+                            (u.p2runs - u.p1runs) * 0.05
+                        )
                       );
                       eloLoss = parseInt(
                         50 + (elo1 - elo2) * 0.1 + (u.p2runs - u.p1runs) * 0.05
@@ -139,7 +250,7 @@ export default async function handler(req, res) {
                         { _id: ObjectId(iid1) },
                         {
                           $set: {
-                            elo: Math.max(0, elo1 - eloLoss),
+                            elo: Math.max(0, elo1 - Math.max(1, eloLoss)),
                           },
                         }
                       );
@@ -147,7 +258,7 @@ export default async function handler(req, res) {
                         { _id: ObjectId(iid2) },
                         {
                           $set: {
-                            elo: elo2 + eloGain,
+                            elo: elo2 + Math.max(0, eloGain),
                           },
                         }
                       );
@@ -168,7 +279,7 @@ export default async function handler(req, res) {
                             // completedOn: new Date(),
                             p1Score: u.p1runs,
                             p2Score: u.p2runs,
-                            eloChange: -1 * eloLoss,
+                            eloChange: -1 * Math.max(1, eloLoss),
                             winner: iid2,
                           },
                         },
@@ -190,7 +301,7 @@ export default async function handler(req, res) {
                             // completedOn: new Date(),
                             p1Score: u.p1runs,
                             p2Score: u.p2runs,
-                            eloChange: eloGain,
+                            eloChange: Math.max(0, eloGain),
                             winner: iid2,
                           },
                         },
@@ -198,44 +309,80 @@ export default async function handler(req, res) {
                     );
                     // Delete match, add match to match history, add exp
                   } else {
-                    let xp1, xp2;
-                    if (u.outs == 3) {
-                      //p1 wins
-                      let elo1,
-                        elo2,
-                        eloGain = 0,
-                        eloLoss = 0;
-                      // Ties will count as the p2 winning. No overtime in matches.
-                      await db
-                        .collection("account")
-                        .findOne({ _id: ObjectId(iid1) })
-                        .then((bl) => {
-                          elo1 = bl.elo;
-                          xp1 = bl.exp;
-                        });
-                      await db
-                        .collection("account")
-                        .findOne({ _id: ObjectId(iid2) })
-                        .then((bl) => {
-                          elo2 = bl.elo;
-                          xp2 = bl.exp;
-                        });
-                      if (u.isRanked) {
-                        eloGain = parseInt(
-                          40 +
-                            (elo2 - elo1) * 0.1 +
-                            (u.p1runs - u.p2runs) * 0.05
-                        );
-                        eloLoss = parseInt(
-                          50 +
-                            (elo2 - elo1) * 0.1 +
-                            (u.p1runs - u.p2runs) * 0.05
-                        );
+                    if (canAddMatch) {
+                      let xp1, xp2;
+                      if (u.outs == 3) {
+                        //p1 wins
+                        let elo1,
+                          elo2,
+                          eloGain = 0,
+                          eloLoss = 0;
+                        // Ties will count as the p2 winning. No overtime in matches.
+                        await db
+                          .collection("account")
+                          .findOne({ _id: ObjectId(iid1) })
+                          .then((bl) => {
+                            elo1 = bl.elo;
+                            xp1 = bl.exp;
+                          });
+                        await db
+                          .collection("account")
+                          .findOne({ _id: ObjectId(iid2) })
+                          .then((bl) => {
+                            elo2 = bl.elo;
+                            xp2 = bl.exp;
+                          });
+                        if (u.isRanked) {
+                          eloGain = Math.max(
+                            30,
+                            parseInt(
+                              40 +
+                                (elo2 - elo1) * 0.1 +
+                                (u.p1runs - u.p2runs) * 0.05
+                            )
+                          );
+                          eloLoss = parseInt(
+                            50 +
+                              (elo2 - elo1) * 0.1 +
+                              (u.p1runs - u.p2runs) * 0.05
+                          );
+                          await db.collection("account").updateOne(
+                            { _id: ObjectId(iid1) },
+                            {
+                              $set: {
+                                elo: elo1 + Math.max(0, eloGain),
+                              },
+                            }
+                          );
+                          await db.collection("account").updateOne(
+                            { _id: ObjectId(iid2) },
+                            {
+                              $set: {
+                                elo: Math.max(0, elo2 - Math.max(1, eloLoss)),
+                              },
+                            }
+                          );
+                        }
                         await db.collection("account").updateOne(
                           { _id: ObjectId(iid1) },
                           {
                             $set: {
-                              elo: elo1 + eloGain,
+                              exp:
+                                xp1 +
+                                10 *
+                                  (u.currentPitcherPower +
+                                    u.currentBattingOrder),
+                              currentMatch: "",
+                            },
+                            $addToSet: {
+                              matchHistory: {
+                                gameId: req.body.gameid,
+                                // completedOn: new Date(),
+                                p1Score: u.p1runs,
+                                p2Score: u.p2runs,
+                                eloChange: Math.max(0, eloGain),
+                                winner: iid1,
+                              },
                             },
                           }
                         );
@@ -243,55 +390,26 @@ export default async function handler(req, res) {
                           { _id: ObjectId(iid2) },
                           {
                             $set: {
-                              elo: Math.max(0, elo2 - eloLoss),
+                              exp:
+                                xp2 +
+                                10 *
+                                  (u.currentPitcherPower +
+                                    u.currentBattingOrder),
+                              currentMatch: "",
+                            },
+                            $addToSet: {
+                              matchHistory: {
+                                gameId: req.body.gameid,
+                                // completedOn: new Date(),
+                                p1Score: u.p1runs,
+                                p2Score: u.p2runs,
+                                eloChange: -1 * Math.max(1, eloLoss),
+                                winner: iid1,
+                              },
                             },
                           }
                         );
                       }
-                      await db.collection("account").updateOne(
-                        { _id: ObjectId(iid1) },
-                        {
-                          $set: {
-                            exp:
-                              xp1 +
-                              10 *
-                                (u.currentPitcherPower + u.currentBattingOrder),
-                            currentMatch: "",
-                          },
-                          $addToSet: {
-                            matchHistory: {
-                              gameId: req.body.gameid,
-                              // completedOn: new Date(),
-                              p1Score: u.p1runs,
-                              p2Score: u.p2runs,
-                              eloChange: eloGain,
-                              winner: iid1,
-                            },
-                          },
-                        }
-                      );
-                      await db.collection("account").updateOne(
-                        { _id: ObjectId(iid2) },
-                        {
-                          $set: {
-                            exp:
-                              xp2 +
-                              10 *
-                                (u.currentPitcherPower + u.currentBattingOrder),
-                            currentMatch: "",
-                          },
-                          $addToSet: {
-                            matchHistory: {
-                              gameId: req.body.gameid,
-                              // completedOn: new Date(),
-                              p1Score: u.p1runs,
-                              p2Score: u.p2runs,
-                              eloChange: -1 * eloLoss,
-                              winner: iid1,
-                            },
-                          },
-                        }
-                      );
                     }
                   }
                 }
@@ -635,6 +753,18 @@ export default async function handler(req, res) {
                               outs: el.outs + 1,
                               manSecond: true,
                               manFirst: false,
+                              currentBattingOrder: el.currentBattingOrder + 1,
+                            },
+                          }
+                        );
+                      } else {
+                        await db.collection("games").updateOne(
+                          { _id: ObjectId(req.body.gameid) },
+                          {
+                            $set: {
+                              balls: 0,
+                              strikes: 0,
+                              outs: el.outs + 1,
                               currentBattingOrder: el.currentBattingOrder + 1,
                             },
                           }
@@ -1086,6 +1216,49 @@ export default async function handler(req, res) {
                 }
               }
             }
+            await db
+              .collection("games")
+              .findOne({ _id: ObjectId(req.body.gameid) })
+              .then(async (u) => {
+                if (u.currentInning != 9) {
+                  if (u.outs == 3 && u.isTopInning) {
+                    await db.collection("games").updateOne(
+                      { _id: ObjectId(req.body.gameid) },
+                      {
+                        $set: {
+                          isTopInning: false,
+                          outs: 0,
+                          balls: 0,
+                          strikes: 0,
+                          manFirst: false,
+                          manSecond: false,
+                          manThird: false,
+                          pastFewPitches: [],
+                        },
+                      }
+                    );
+                  } else {
+                    if (u.outs == 3) {
+                      await db.collection("games").updateOne(
+                        { _id: ObjectId(req.body.gameid) },
+                        {
+                          $set: {
+                            isTopInning: true,
+                            currentInning: u.currentInning + 1,
+                            outs: 0,
+                            balls: 0,
+                            strikes: 0,
+                            manFirst: false,
+                            manSecond: false,
+                            manThird: false,
+                            pastFewPitches: [],
+                          },
+                        }
+                      );
+                    }
+                  }
+                }
+              });
             // Player 1 enqueued this request.
             // strike, ball, hit, groundout, flyout
             // hit:                  single, double, triple, home run,
@@ -1116,6 +1289,7 @@ export default async function handler(req, res) {
                 },
               }
             );
+
             // check inning end and game ended yet
           } else {
             await db.collection("games").updateOne(

@@ -53,6 +53,7 @@ export default async function handler(req, res) {
           elo: 0,
           username: req.body.username,
           friends: [],
+          friendReqs: [],
           players: [
             {
               position: "P",

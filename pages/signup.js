@@ -65,21 +65,21 @@ export default function Signup() {
           <br />
           <Grid item>
             <TextField
-              label="Password"
-              type="password"
+              label="Username"
               variant="outlined"
-              onChange={(v) => setPassword(v.target.value)}
-              helperText="Enter your password."
+              onChange={(v) => setUsername(v.target.value)}
+              helperText="Pick a display username."
               style={{ width: "100%" }}
             />
           </Grid>
           <br />
           <Grid item>
             <TextField
-              label="Username"
+              label="Password"
+              type="password"
               variant="outlined"
-              onChange={(v) => setUsername(v.target.value)}
-              helperText="Pick a display username."
+              onChange={(v) => setPassword(v.target.value)}
+              helperText="Enter your password."
               style={{ width: "100%" }}
             />
           </Grid>

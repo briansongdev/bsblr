@@ -1,7 +1,8 @@
 import Head from "next/head";
 import clientPromise from "../lib/mongodb";
 import { getSession, useSession } from "next-auth/react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { Howl } from "howler";
 import axios from "axios";
 import { useRouter } from "next/router";
 import {
@@ -28,6 +29,9 @@ export default function Game({ isConnected }) {
   const [timer, setTimer] = useState(-1);
   const [subDisabled, setDisabled] = useState(false);
   const [currentGuess, setGuess] = useState(-1);
+  const [message, setMessage] = useState("");
+  const [rank1, updateRank1] = useState({ name: "", color: "grey" });
+  const [rank2, updateRank2] = useState({ name: "", color: "grey" });
   const { data: session, status } = useSession();
 
   const router = useRouter();
@@ -54,7 +58,21 @@ export default function Game({ isConnected }) {
                   gameid: res.data.currentMatch,
                 },
               })
-              .then((res1) => {
+              .then(async (res1) => {
+                await axios
+                  .post("/api/rank", {
+                    usern: res1.data.player1,
+                  })
+                  .then((rank1) => {
+                    updateRank1(rank1.data);
+                  });
+                await axios
+                  .post("/api/rank", {
+                    usern: res1.data.player2,
+                  })
+                  .then((rank1) => {
+                    updateRank2(rank1.data);
+                  });
                 setGameInfo(res1.data);
               });
             let myInt = setInterval(async () => {
@@ -81,10 +99,18 @@ export default function Game({ isConnected }) {
                       gameid: res.data.currentMatch,
                     });
                   }
-                  if (res1.data.countdown <= 0) {
-                    // reset all values
+                  if (res1.data.countdown == 0) {
+                    let sound1 = new Howl({
+                      src: [
+                        "https://assets.mixkit.co/sfx/preview/mixkit-retro-game-notification-212.mp3",
+                      ],
+                      html5: true,
+                      volume: 0.1,
+                    });
+                    sound1.play();
                     setDisabled(false);
                     setGuess(-1);
+                    setMessage("");
                     await axios
                       .get("/api/auth/account", {
                         headers: {
@@ -118,10 +144,8 @@ export default function Game({ isConnected }) {
           <Container>
             <Typography variant="h3">BSBLR</Typography>
             <Typography>
-              {gameInfo.isRanked ? "Ranked game" : "Unranked game"} -{" "}
-              {gameInfo.player1} vs. {gameInfo.player2}
+              {gameInfo.isRanked ? "Ranked game" : "Unranked game"}
             </Typography>
-
             <Card
               style={{
                 width: "100%",
@@ -139,8 +163,17 @@ export default function Game({ isConnected }) {
                   direction="row"
                   justifyContent="space-around"
                   alignItems="center"
-                  spacing={4}
+                  spacing={3}
                 >
+                  <Grid item>
+                    <Typography
+                      id={rank1.color}
+                      style={{ color: rank1.color }}
+                      variant="h4"
+                    >
+                      {gameInfo.player1}
+                    </Typography>
+                  </Grid>
                   <Grid item>
                     <Typography variant="h4" color="text.secondary">
                       {gameInfo.p1runs}
@@ -166,53 +199,15 @@ export default function Game({ isConnected }) {
                       {gameInfo.p2runs}
                     </Typography>
                   </Grid>
-                </Grid>
-                <Grid
-                  container
-                  direction="row"
-                  justifyContent="center"
-                  alignItems="center"
-                  spacing={2}
-                >
                   <Grid item>
-                    <Typography variant="h6">
-                      OUTS{" "}
-                      <span style={{ color: "grey" }}>{gameInfo.outs}</span>
+                    <Typography
+                      id={rank2.color}
+                      style={{ color: rank2.color }}
+                      variant="h4"
+                    >
+                      {gameInfo.player2}
                     </Typography>
                   </Grid>
-                  <Grid item>
-                    {" "}
-                    <Typography variant="h6">
-                      BALLS{" "}
-                      <span style={{ color: "grey" }}>{gameInfo.balls}</span>{" "}
-                    </Typography>
-                  </Grid>
-                  <Grid item>
-                    <Typography variant="h6">
-                      STRIKES{" "}
-                      <span style={{ color: "grey" }}>{gameInfo.strikes}</span>{" "}
-                    </Typography>
-                  </Grid>
-                  {gameInfo.manFirst ||
-                  gameInfo.manSecond ||
-                  gameInfo.manThird ? (
-                    <Grid item>
-                      <Typography variant="h6">
-                        MAN ON{" "}
-                        <span style={{ color: "grey" }}>
-                          {gameInfo.manFirst ? "FIRST " : ""}
-                          {gameInfo.manSecond ? "SECOND " : ""}
-                          {gameInfo.manThird ? "THIRD " : ""}
-                        </span>
-                      </Typography>
-                    </Grid>
-                  ) : (
-                    <>
-                      <Grid item>
-                        <Typography variant="h6">NO MEN ON BASE</Typography>
-                      </Grid>
-                    </>
-                  )}
                 </Grid>
                 <Grid
                   container
@@ -223,6 +218,63 @@ export default function Game({ isConnected }) {
                   sx={{ mt: 1 }}
                 >
                   <Grid item>
+                    <Typography variant="h6">
+                      OUTS:{" "}
+                      <span style={{ color: "grey" }}>{gameInfo.outs}</span>
+                    </Typography>
+                  </Grid>
+                  <Grid item>
+                    {" "}
+                    <Typography variant="h6">
+                      BALLS:{" "}
+                      <span style={{ color: "grey" }}>{gameInfo.balls}</span>{" "}
+                    </Typography>
+                  </Grid>
+                  <Grid item>
+                    <Typography variant="h6">
+                      STRIKES:{" "}
+                      <span style={{ color: "grey" }}>{gameInfo.strikes}</span>{" "}
+                    </Typography>
+                  </Grid>
+                  {gameInfo.manFirst ||
+                  gameInfo.manSecond ||
+                  gameInfo.manThird ? (
+                    <Grid item>
+                      <Typography variant="h6">
+                        MAN ON:{" "}
+                        <span style={{ color: "grey" }}>
+                          {gameInfo.manFirst ? "FIRST " : ""}
+                          {gameInfo.manSecond ? "SECOND " : ""}
+                          {gameInfo.manThird ? "THIRD " : ""}
+                        </span>
+                      </Typography>
+                    </Grid>
+                  ) : (
+                    <></>
+                  )}
+                </Grid>
+              </CardContent>
+            </Card>
+            <Card
+              style={{
+                width: "100%",
+                marginTop: "20px",
+                marginBottom: "20px",
+              }}
+              variant="outlined"
+            >
+              {" "}
+              <CardContent
+                sx={{ justifyContent: "center", textAlign: "center" }}
+              >
+                <Grid
+                  container
+                  direction="row"
+                  justifyContent="center"
+                  alignItems="center"
+                  spacing={2}
+                >
+                  <Grid item>
                     {" "}
                     <TimerIcon
                       fontSize="large"
@@ -231,7 +283,10 @@ export default function Game({ isConnected }) {
                   </Grid>
                   <Grid item>
                     <Typography variant="h5">
-                      {timer} seconds left before next pitch
+                      <span style={{ textDecoration: "underline" }}>
+                        {timer}
+                      </span>{" "}
+                      seconds left before next pitch
                     </Typography>
                   </Grid>
                 </Grid>
@@ -368,29 +423,41 @@ export default function Game({ isConnected }) {
                       </Typography>
                       <Button
                         onClick={async () => {
-                          await axios.post("/api/guess", {
-                            email: userInfo.email,
-                            password: userInfo.password,
-                            gameid: currentMatch,
-                            guess: currentGuess,
-                            uid: session.user.name,
-                            lowRange:
-                              gameInfo.p1pitcher.strength * 7 -
-                              gameInfo.p1pitcher.pitchCom,
-                            highRange:
-                              gameInfo.p1pitcher.strength * 7 +
-                              gameInfo.p1pitcher.pitchCom,
-                          });
+                          await axios
+                            .post("/api/guess", {
+                              email: userInfo.email,
+                              password: userInfo.password,
+                              gameid: currentMatch,
+                              guess: currentGuess,
+                              uid: session.user.name,
+                              lowRange:
+                                gameInfo.p1pitcher.strength * 7 -
+                                gameInfo.p1pitcher.pitchCom,
+                              highRange:
+                                gameInfo.p1pitcher.strength * 7 +
+                                gameInfo.p1pitcher.pitchCom,
+                            })
+                            .then(() => {
+                              setMessage(currentGuess + " has been submitted!");
+                            });
                         }}
-                        disabled={subDisabled}
                         gutterBottom
                       >
                         Submit your Velocity
                       </Button>
                       {currentGuess != -1 ? (
-                        <Alert severity="info" sx={{ mt: 1 }}>
-                          You dialed it up to {currentGuess} mph
-                        </Alert>
+                        <>
+                          <Alert severity="info" sx={{ mt: 1 }}>
+                            You dialed it up to {currentGuess} mph
+                          </Alert>
+                          {message != "" ? (
+                            <Alert severity="success" sx={{ mt: 1 }}>
+                              {message}
+                            </Alert>
+                          ) : (
+                            <></>
+                          )}
+                        </>
                       ) : (
                         <></>
                       )}
@@ -427,19 +494,23 @@ export default function Game({ isConnected }) {
                       </Typography>
                       <Button
                         onClick={async () => {
-                          await axios.post("/api/guess", {
-                            email: userInfo.email,
-                            password: userInfo.password,
-                            gameid: currentMatch,
-                            guess: currentGuess,
-                            uid: session.user.name,
-                            lowRange:
-                              gameInfo.p2pitcher.strength * 7 -
-                              gameInfo.p2pitcher.pitchCom,
-                            highRange:
-                              gameInfo.p2pitcher.strength * 7 +
-                              gameInfo.p2pitcher.pitchCom,
-                          });
+                          await axios
+                            .post("/api/guess", {
+                              email: userInfo.email,
+                              password: userInfo.password,
+                              gameid: currentMatch,
+                              guess: currentGuess,
+                              uid: session.user.name,
+                              lowRange:
+                                gameInfo.p2pitcher.strength * 7 -
+                                gameInfo.p2pitcher.pitchCom,
+                              highRange:
+                                gameInfo.p2pitcher.strength * 7 +
+                                gameInfo.p2pitcher.pitchCom,
+                            })
+                            .then(() => {
+                              setMessage(currentGuess + " has been submitted!");
+                            });
                         }}
                         disabled={subDisabled}
                         gutterBottom
@@ -447,9 +518,18 @@ export default function Game({ isConnected }) {
                         Submit your Guess
                       </Button>
                       {currentGuess != -1 ? (
-                        <Alert severity="info" sx={{ mt: 1 }}>
-                          Current Guess: {currentGuess} mph
-                        </Alert>
+                        <>
+                          <Alert severity="info" sx={{ mt: 1 }}>
+                            Current Guess: {currentGuess} mph
+                          </Alert>{" "}
+                          {message != "" ? (
+                            <Alert severity="success" sx={{ mt: 1 }}>
+                              {message}
+                            </Alert>
+                          ) : (
+                            <></>
+                          )}
+                        </>
                       ) : (
                         <></>
                       )}
@@ -490,19 +570,23 @@ export default function Game({ isConnected }) {
                       </Typography>
                       <Button
                         onClick={async () => {
-                          await axios.post("/api/guess", {
-                            email: userInfo.email,
-                            password: userInfo.password,
-                            gameid: currentMatch,
-                            guess: currentGuess,
-                            uid: session.user.name,
-                            lowRange:
-                              gameInfo.p2pitcher.strength * 7 -
-                              gameInfo.p2pitcher.pitchCom,
-                            highRange:
-                              gameInfo.p2pitcher.strength * 7 +
-                              gameInfo.p2pitcher.pitchCom,
-                          });
+                          await axios
+                            .post("/api/guess", {
+                              email: userInfo.email,
+                              password: userInfo.password,
+                              gameid: currentMatch,
+                              guess: currentGuess,
+                              uid: session.user.name,
+                              lowRange:
+                                gameInfo.p2pitcher.strength * 7 -
+                                gameInfo.p2pitcher.pitchCom,
+                              highRange:
+                                gameInfo.p2pitcher.strength * 7 +
+                                gameInfo.p2pitcher.pitchCom,
+                            })
+                            .then(() => {
+                              setMessage(currentGuess + " has been submitted!");
+                            });
                         }}
                         disabled={subDisabled}
                         gutterBottom
@@ -510,9 +594,18 @@ export default function Game({ isConnected }) {
                         Submit your Velocity
                       </Button>
                       {currentGuess != -1 ? (
-                        <Alert severity="info" sx={{ mt: 1 }}>
-                          You dialed it up to {currentGuess} mph
-                        </Alert>
+                        <>
+                          <Alert severity="info" sx={{ mt: 1 }}>
+                            You dialed it up to {currentGuess} mph
+                          </Alert>{" "}
+                          {message != "" ? (
+                            <Alert severity="success" sx={{ mt: 1 }}>
+                              {message}
+                            </Alert>
+                          ) : (
+                            <></>
+                          )}
+                        </>
                       ) : (
                         <></>
                       )}
@@ -550,19 +643,23 @@ export default function Game({ isConnected }) {
                       </Typography>
                       <Button
                         onClick={async () => {
-                          await axios.post("/api/guess", {
-                            email: userInfo.email,
-                            password: userInfo.password,
-                            gameid: currentMatch,
-                            guess: currentGuess,
-                            uid: session.user.name,
-                            lowRange:
-                              gameInfo.p1pitcher.strength * 7 -
-                              gameInfo.p1pitcher.pitchCom,
-                            highRange:
-                              gameInfo.p1pitcher.strength * 7 +
-                              gameInfo.p1pitcher.pitchCom,
-                          });
+                          await axios
+                            .post("/api/guess", {
+                              email: userInfo.email,
+                              password: userInfo.password,
+                              gameid: currentMatch,
+                              guess: currentGuess,
+                              uid: session.user.name,
+                              lowRange:
+                                gameInfo.p1pitcher.strength * 7 -
+                                gameInfo.p1pitcher.pitchCom,
+                              highRange:
+                                gameInfo.p1pitcher.strength * 7 +
+                                gameInfo.p1pitcher.pitchCom,
+                            })
+                            .then(() => {
+                              setMessage(currentGuess + " has been submitted!");
+                            });
                         }}
                         disabled={subDisabled}
                         gutterBottom
@@ -570,9 +667,18 @@ export default function Game({ isConnected }) {
                         Submit your Guess
                       </Button>
                       {currentGuess != -1 ? (
-                        <Alert severity="info" sx={{ mt: 1 }}>
-                          Current Guess: {currentGuess} mph
-                        </Alert>
+                        <>
+                          <Alert severity="info" sx={{ mt: 1 }}>
+                            Current Guess: {currentGuess} mph
+                          </Alert>{" "}
+                          {message != "" ? (
+                            <Alert severity="success" sx={{ mt: 1 }}>
+                              {message}
+                            </Alert>
+                          ) : (
+                            <></>
+                          )}
+                        </>
                       ) : (
                         <></>
                       )}
