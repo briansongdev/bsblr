@@ -398,7 +398,7 @@ export default function Game({ isConnected }) {
                         Base Velocity:{" "}
                         {gameInfo.p2pitcher.strength >= 25 ? (
                           <span id="fire-text">
-                            {gameInfo.p2pitcher.pitchCom * 7}
+                            {gameInfo.p2pitcher.strength * 7}
                           </span>
                         ) : (
                           <>{gameInfo.p2pitcher.strength * 7}</>
@@ -465,7 +465,7 @@ export default function Game({ isConnected }) {
                         Base Velocity:{" "}
                         {gameInfo.p1pitcher.strength >= 25 ? (
                           <span id="fire-text">
-                            {gameInfo.p1pitcher.pitchCom * 7}
+                            {gameInfo.p1pitcher.strength * 7}
                           </span>
                         ) : (
                           <>{gameInfo.p1pitcher.strength * 7}</>

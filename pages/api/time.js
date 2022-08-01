@@ -99,7 +99,7 @@ export default async function handler(req, res) {
                   el.p1batters[el.currentBattingOrder % el.p1batters.length]
                     .strength -
                   el.p2pitcher.strength * 1.5 +
-                  300 / (Math.abs(curr1Guess - curr2Guess) + 1) -
+                  200 / (Math.abs(curr1Guess - curr2Guess) + 1) -
                   average(el.p2batters);
                 if (score < 5) {
                   // swinging strike, determine if strikeout or not
@@ -503,7 +503,7 @@ export default async function handler(req, res) {
                   el.p2batters[el.currentPitcherPower % el.p2batters.length]
                     .strength -
                   el.p1pitcher.strength * 1.5 +
-                  300 / (Math.abs(curr1Guess - curr2Guess) + 1) -
+                  200 / (Math.abs(curr1Guess - curr2Guess) + 1) -
                   average(el.p1batters);
 
                 if (score < 5) {
