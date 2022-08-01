@@ -230,7 +230,14 @@ export default function Home({ isConnected }) {
                       </Typography>
                     </CardContent>
                     <CardActions>
-                      <Button size="small">Manage Players</Button>
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          router.push("/players");
+                        }}
+                      >
+                        Manage Players
+                      </Button>
                       <Button
                         size="small"
                         onClick={() => {
