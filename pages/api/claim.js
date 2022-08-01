@@ -24,31 +24,16 @@ export default async function handler(req, res) {
         .collection("account")
         .findOne({ email: req.body.email })
         .then(async (u) => {
-          let sortedArr = u.levelRewards.sort((a, b) =>
-            a.level > b.level ? 1 : -1
-          );
+          let sortedArr = u.levelRewards.sort();
           for (let i = 0; i <= Math.floor(u.exp / 1000) - 1; i++) {
-            if (!sortedArr[i].claimed) {
+            if (i >= sortedArr.length) {
+              // not done yet, start collecting from here
               totalTicketsAdded += 10;
               await db.collection("account").updateOne(
                 { email: req.body.email },
                 {
-                  $pull: {
-                    levelRewards: {
-                      level: i + 1,
-                    },
-                  },
-                }
-              );
-
-              await db.collection("account").updateOne(
-                { email: req.body.email },
-                {
                   $push: {
-                    levelRewards: {
-                      level: i + 1,
-                      claimed: true,
-                    },
+                    levelRewards: i + 1,
                   },
                   $set: {
                     tickets: u.tickets + 10,
@@ -57,6 +42,7 @@ export default async function handler(req, res) {
               );
             }
           }
+
           await db.collection("account").updateOne(
             { email: req.body.email },
             {

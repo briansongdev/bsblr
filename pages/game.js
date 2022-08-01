@@ -5,19 +5,14 @@ import { useState, useEffect } from "react";
 import { Howl } from "howler";
 import axios from "axios";
 import { useRouter } from "next/router";
-import {
-  Container,
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Grid,
-  Alert,
-  Card,
-  CardContent,
-  CardActions,
-  Slider,
-} from "@mui/material";
+import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import Grid from "@mui/material/Grid";
+import Alert from "@mui/material/Alert";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardActions from "@mui/material/CardActions";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import TimerIcon from "@mui/icons-material/Timer";
@@ -27,7 +22,6 @@ export default function Game({ isConnected }) {
   const [userInfo, setUserInfo] = useState({});
   const [gameInfo, setGameInfo] = useState({});
   const [timer, setTimer] = useState(-1);
-  const [subDisabled, setDisabled] = useState(false);
   const [currentGuess, setGuess] = useState(-1);
   const [message, setMessage] = useState("");
   const [rank1, updateRank1] = useState({ name: "", color: "grey" });
@@ -106,6 +100,31 @@ export default function Game({ isConnected }) {
                       gameid: res.data.currentMatch,
                     });
                   }
+                  if (otherAFK) {
+                    await axios
+                      .get("/api/game", {
+                        headers: {
+                          email: res.data.email,
+                          password: res.data.password,
+                          gameid: res.data.currentMatch,
+                        },
+                      })
+                      .then((sdadla) => {
+                        setTimer(sdadla.data.countdown);
+                      });
+                  }
+                  await axios
+                    .get("/api/auth/account", {
+                      headers: {
+                        uid: session.user.name,
+                      },
+                    })
+                    .then((res2) => {
+                      if (res2.data.currentMatch == "") {
+                        clearInterval(myInt);
+                        router.push("/");
+                      }
+                    });
                   if (res1.data.countdown == 0) {
                     let sound1 = new Howl({
                       src: [
@@ -118,18 +137,6 @@ export default function Game({ isConnected }) {
                     setDisabled(false);
                     setGuess(-1);
                     setMessage("");
-                    await axios
-                      .get("/api/auth/account", {
-                        headers: {
-                          uid: session.user.name,
-                        },
-                      })
-                      .then((res2) => {
-                        if (res2.data.currentMatch == "") {
-                          clearInterval(myInt);
-                          router.push("/");
-                        }
-                      });
                     await axios
                       .get("/api/game", {
                         headers: {
@@ -161,8 +168,8 @@ export default function Game({ isConnected }) {
           </Head>
           <Container>
             <Typography variant="h3">BSBLR</Typography>
-            <Typography>
-              {gameInfo.isRanked ? "Ranked game" : "Unranked game"}
+            <Typography gutterBottom>
+              {gameInfo.isRanked ? "Ranked game" : "Unranked game"}{" "}
             </Typography>
             <Card
               style={{
@@ -271,6 +278,27 @@ export default function Game({ isConnected }) {
                     <></>
                   )}
                 </Grid>
+                {(gameInfo.player1 == userInfo.username &&
+                  gameInfo.p1runs < gameInfo.p2runs) ||
+                (gameInfo.player2 == userInfo.username &&
+                  gameInfo.p2runs < gameInfo.p1runs) ? (
+                  <Button
+                    sx={{ mt: 1 }}
+                    variant="contained"
+                    color="error"
+                    size="small"
+                    onClick={async () => {
+                      await axios.post("/api/forfeit", {
+                        email: userInfo.email,
+                        password: userInfo.password,
+                      });
+                    }}
+                  >
+                    Forfeit match{" "}
+                  </Button>
+                ) : (
+                  <></>
+                )}
               </CardContent>
             </Card>
             <Card
@@ -370,14 +398,32 @@ export default function Game({ isConnected }) {
                           <>{gameInfo.p2pitcher.strength * 7}</>
                         )}
                       </Typography>{" "}
-                      <Typography>Past velocities and guesses:</Typography>
+                      <Typography>
+                        <strong>Past velocities and guesses:</strong>
+                      </Typography>
                       {gameInfo.pastFewPitches
+                        .filter(
+                          (value, index, self) =>
+                            index ===
+                            self.findIndex(
+                              (t) =>
+                                t.guess1 === value.guess1 &&
+                                t.guess2 === value.guess2
+                            )
+                        )
                         .slice()
                         .reverse()
                         .map((asl) => {
                           return (
                             <Typography>
-                              {asl.guess1} mph and {asl.guess2} mph
+                              {asl.guess1 == -500 || asl.guess2 == 500 ? (
+                                <>One player did not guess.</>
+                              ) : (
+                                <>
+                                  {gameInfo.player1} {asl.guess1} mph,{" "}
+                                  {gameInfo.player2} {asl.guess2} mph
+                                </>
+                              )}
                             </Typography>
                           );
                         })}
@@ -419,14 +465,33 @@ export default function Game({ isConnected }) {
                           <>{gameInfo.p1pitcher.strength * 7}</>
                         )}
                       </Typography>
-                      <Typography>Past velocities and guesses:</Typography>
+                      <Typography>
+                        <strong>Past velocities and guesses:</strong>
+                      </Typography>
                       {gameInfo.pastFewPitches
+                        .filter(
+                          (value, index, self) =>
+                            index ===
+                            self.findIndex(
+                              (t) =>
+                                t.guess1 === value.guess1 &&
+                                t.guess2 === value.guess2
+                            )
+                        )
                         .slice()
                         .reverse()
                         .map((asl) => {
                           return (
                             <Typography>
-                              {asl.guess1} mph and {asl.guess2} mph
+                              {asl.guess1 == -500 || asl.guess2 == 500 ? (
+                                <>One player did not guess.</>
+                              ) : (
+                                <>
+                                  {" "}
+                                  {gameInfo.player2} {asl.guess1} mph,{" "}
+                                  {gameInfo.player1} {asl.guess2} mph
+                                </>
+                              )}
                             </Typography>
                           );
                         })}
@@ -464,10 +529,13 @@ export default function Game({ isConnected }) {
                       />
                       <Typography gutterBottom>
                         {" "}
-                        You may change your velocity as many times as you'd
-                        like. Click "submit" to submit.
+                        Once both players submit or the timer ends, the pitch
+                        will be thrown.
                       </Typography>
                       <Button
+                        color="success"
+                        variant="contained"
+                        disabled={currentGuess == -1}
                         onClick={async () => {
                           await axios
                             .post("/api/guess", {
@@ -494,7 +562,7 @@ export default function Game({ isConnected }) {
                       {currentGuess != -1 ? (
                         <>
                           <Alert severity="info" sx={{ mt: 1 }}>
-                            You dialed it up to {currentGuess} mph
+                            You dialed it to {currentGuess} mph.
                           </Alert>
                           {message != "" ? (
                             <Alert severity="success" sx={{ mt: 1 }}>
@@ -535,10 +603,13 @@ export default function Game({ isConnected }) {
                         }}
                       />
                       <Typography gutterBottom>
-                        You may change your guess as many times as you'd like.
-                        Click "submit" to submit.
+                        Once both players submit or the timer ends, the pitch
+                        will be thrown.
                       </Typography>
                       <Button
+                        color="success"
+                        variant="contained"
+                        disabled={currentGuess == -1}
                         onClick={async () => {
                           await axios
                             .post("/api/guess", {
@@ -558,7 +629,6 @@ export default function Game({ isConnected }) {
                               setMessage(currentGuess + " has been submitted!");
                             });
                         }}
-                        disabled={subDisabled}
                         gutterBottom
                       >
                         Submit your Guess
@@ -566,7 +636,7 @@ export default function Game({ isConnected }) {
                       {currentGuess != -1 ? (
                         <>
                           <Alert severity="info" sx={{ mt: 1 }}>
-                            Current Guess: {currentGuess} mph
+                            Current Guess: {currentGuess} mph.
                           </Alert>{" "}
                           {message != "" ? (
                             <Alert severity="success" sx={{ mt: 1 }}>
@@ -611,10 +681,13 @@ export default function Game({ isConnected }) {
                       />
                       <Typography gutterBottom>
                         {" "}
-                        You may change your velocity as many times as you'd
-                        like. Click "submit" to submit.
+                        Once both players submit or the timer ends, the pitch
+                        will be thrown.
                       </Typography>
                       <Button
+                        color="success"
+                        disabled={currentGuess == -1}
+                        variant="contained"
                         onClick={async () => {
                           await axios
                             .post("/api/guess", {
@@ -634,7 +707,6 @@ export default function Game({ isConnected }) {
                               setMessage(currentGuess + " has been submitted!");
                             });
                         }}
-                        disabled={subDisabled}
                         gutterBottom
                       >
                         Submit your Velocity
@@ -642,7 +714,7 @@ export default function Game({ isConnected }) {
                       {currentGuess != -1 ? (
                         <>
                           <Alert severity="info" sx={{ mt: 1 }}>
-                            You dialed it up to {currentGuess} mph
+                            You dialed it to {currentGuess} mph.
                           </Alert>{" "}
                           {message != "" ? (
                             <Alert severity="success" sx={{ mt: 1 }}>
@@ -684,10 +756,13 @@ export default function Game({ isConnected }) {
                       />
                       <Typography gutterBottom>
                         {" "}
-                        You may change your guess as many times as you'd like.
-                        Click "submit" to submit.
+                        Once both players submit or the timer ends, the pitch
+                        will be thrown.
                       </Typography>
                       <Button
+                        variant="contained"
+                        color="success"
+                        disabled={currentGuess == -1}
                         onClick={async () => {
                           await axios
                             .post("/api/guess", {
@@ -707,7 +782,6 @@ export default function Game({ isConnected }) {
                               setMessage(currentGuess + " has been submitted!");
                             });
                         }}
-                        disabled={subDisabled}
                         gutterBottom
                       >
                         Submit your Guess
@@ -715,7 +789,7 @@ export default function Game({ isConnected }) {
                       {currentGuess != -1 ? (
                         <>
                           <Alert severity="info" sx={{ mt: 1 }}>
-                            Current Guess: {currentGuess} mph
+                            Current Guess: {currentGuess} mph.
                           </Alert>{" "}
                           {message != "" ? (
                             <Alert severity="success" sx={{ mt: 1 }}>

@@ -46,13 +46,6 @@ export default async function handler(req, res) {
       try {
         // connect to the database
         // add the account
-        const levelRewards = [];
-        for (let i = 1; i <= 1500; i++) {
-          levelRewards.push({
-            level: i,
-            claimed: false,
-          });
-        }
         let newBody = {
           email: req.body.email,
           password: hash,
@@ -199,7 +192,7 @@ export default async function handler(req, res) {
             strength: 10,
           },
           matchHistory: [],
-          levelRewards: levelRewards,
+          levelRewards: [],
           exp: 1000,
           tickets: 100,
           currentMatch: "",

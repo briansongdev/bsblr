@@ -415,7 +415,7 @@ export default function Home({ isConnected }) {
                         value={(userInfo.exp / 10) % 100}
                       />
                       <Typography variant="body2">
-                        Tickets: {userInfo.tickets}
+                        Tickets: {userInfo.tickets} (+10 daily reward)
                       </Typography>
                       <Typography variant="body2">
                         Joined:{" "}
@@ -1048,9 +1048,17 @@ export default function Home({ isConnected }) {
                         variant="h5"
                         component="div"
                         color="text.secondary"
+                        gutterBottom
                       >
                         My Match History
                       </Typography>
+                      {userInfo.matchHistory.length == 0 ? (
+                        <Typography>
+                          No matches played. Start your first one!
+                        </Typography>
+                      ) : (
+                        <></>
+                      )}
                       {userInfo.matchHistory
                         .slice()
                         .reverse()

@@ -261,34 +261,34 @@ export default function Home({ isConnected }) {
                         Level Milestones
                       </Typography>
                       <Typography>...</Typography>
-                      {userInfo.levelRewards
-                        .sort((a, b) => (a.level > b.level ? 1 : -1))
-                        .map((d, index) => {
-                          if (
-                            Math.floor(userInfo.exp / 1000) - (index + 1) <=
-                              5 &&
-                            index + 1 <= Math.floor(userInfo.exp / 1000)
-                          ) {
-                            return (
-                              <Typography>
-                                Level {d.level} -{" "}
-                                {d.claimed ? (
-                                  <span style={{ color: "grey" }}>
-                                    Rewards claimed
-                                  </span>
-                                ) : (
-                                  <span style={{ color: "grey" }}>
-                                    Not claimed yet{" "}
-                                  </span>
-                                )}
-                              </Typography>
-                            );
-                          }
-                        })}
-                      <Typography>...</Typography>
-                      <Typography>
-                        You may have unclaimed tickets from past milestones.
-                      </Typography>
+                      {userInfo.levelRewards.sort().map((d, index) => {
+                        if (
+                          Math.floor(userInfo.exp / 1000) - (index + 1) <= 5 &&
+                          index + 1 <= Math.floor(userInfo.exp / 1000)
+                        ) {
+                          return (
+                            <Typography>
+                              Level {d} -{" "}
+                              <span style={{ color: "grey" }}>
+                                Rewards claimed
+                              </span>
+                            </Typography>
+                          );
+                        }
+                      })}
+                      {userInfo.levelRewards.length == 0 ? (
+                        <Typography>
+                          Claim your first 10 tickets for reaching level 1.
+                        </Typography>
+                      ) : (
+                        <>
+                          {" "}
+                          <Typography>...</Typography>
+                          <Typography>
+                            You may have unclaimed tickets from past milestones.
+                          </Typography>
+                        </>
+                      )}
                       <Button
                         sx={{ width: "100%", mt: 1 }}
                         variant="contained"

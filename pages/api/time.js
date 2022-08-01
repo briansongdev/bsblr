@@ -64,18 +64,20 @@ export default async function handler(req, res) {
               curr1Guess = -500;
             } else {
               curr1Guess = Math.floor(
-                Math.random() *
-                  (7 * el.p1pitcher.strength - el.p1pitcher.pitchCom) +
-                  2 * el.p1pitcher.pitchCom
+                Math.random() * 2 * el.p1pitcher.pitchCom +
+                  7 +
+                  7 * el.p1pitcher.strength -
+                  el.p1pitcher.pitchCom
               );
             }
           }
           if (el.p2currGuess == -1) {
             if (el.isTopInning) {
               curr2Guess = Math.floor(
-                Math.random() *
-                  (7 * el.p2pitcher.strength - el.p2pitcher.pitchCom) +
-                  2 * el.p2pitcher.pitchCom
+                Math.random() * 2 * el.p2pitcher.pitchCom +
+                  7 +
+                  7 * el.p2pitcher.strength -
+                  el.p2pitcher.pitchCom
               );
             } else {
               curr2Guess = -500;
@@ -375,7 +377,7 @@ export default async function handler(req, res) {
               } else {
                 if (randSeed > 0.2) {
                   // groundout, runner from third scores
-                  if (el.manThird) {
+                  if (el.manThird && el.outs < 2) {
                     callBackMsg =
                       el.p1batters[el.currentBattingOrder % el.p1batters.length]
                         .name + " grounded out. Runner from third scores!";
@@ -926,7 +928,7 @@ export default async function handler(req, res) {
               .findOne({ _id: ObjectId(req.body.gameid) })
               .then(async (u) => {
                 if (u.currentInning != 9) {
-                  if (u.outs == 3 && u.isTopInning) {
+                  if (u.outs >= 3 && u.isTopInning) {
                     await db.collection("games").updateOne(
                       { _id: ObjectId(req.body.gameid) },
                       {
@@ -943,7 +945,7 @@ export default async function handler(req, res) {
                       }
                     );
                   } else {
-                    if (u.outs == 3) {
+                    if (u.outs >= 3) {
                       await db.collection("games").updateOne(
                         { _id: ObjectId(req.body.gameid) },
                         {
@@ -963,7 +965,7 @@ export default async function handler(req, res) {
                     }
                   }
                 }
-                if (u.outs == 3 && u.currentInning == 9) {
+                if (u.outs >= 3 && u.currentInning == 9) {
                   if (u.isTopInning) {
                     if (u.p2runs >= u.p1runs && canAddMatch) {
                       let elo1,
@@ -1058,6 +1060,14 @@ export default async function handler(req, res) {
                               eloChange: Math.max(0, eloGain),
                               winner: iid2,
                             },
+                          },
+                        }
+                      );
+                      await db.collection("games").updateOne(
+                        { _id: ObjectId(req.body.gameid) },
+                        {
+                          $set: {
+                            countdown: 0,
                           },
                         }
                       );
@@ -1178,11 +1188,19 @@ export default async function handler(req, res) {
                         },
                       }
                     );
+                    await db.collection("games").updateOne(
+                      { _id: ObjectId(req.body.gameid) },
+                      {
+                        $set: {
+                          countdown: 0,
+                        },
+                      }
+                    );
                     // Delete match, add match to match history, add exp
                   } else {
                     if (canAddMatch) {
                       let xp1, xp2;
-                      if (u.outs == 3) {
+                      if (u.outs >= 3) {
                         //p1 wins
                         let elo1,
                           elo2,
@@ -1280,6 +1298,14 @@ export default async function handler(req, res) {
                             },
                           }
                         );
+                        await db.collection("games").updateOne(
+                          { _id: ObjectId(req.body.gameid) },
+                          {
+                            $set: {
+                              countdown: 0,
+                            },
+                          }
+                        );
                       }
                     }
                   }
@@ -1301,14 +1327,25 @@ export default async function handler(req, res) {
 
             // check inning end and game ended yet
           } else {
-            await db.collection("games").updateOne(
-              { _id: ObjectId(req.body.gameid) },
-              {
-                $set: {
-                  countdown: el.countdown - 1,
-                },
-              }
-            );
+            if (el.p1currGuess != -1 && el.p2currGuess != -1) {
+              await db.collection("games").updateOne(
+                { _id: ObjectId(req.body.gameid) },
+                {
+                  $set: {
+                    countdown: 0,
+                  },
+                }
+              );
+            } else {
+              await db.collection("games").updateOne(
+                { _id: ObjectId(req.body.gameid) },
+                {
+                  $set: {
+                    countdown: el.countdown - 1,
+                  },
+                }
+              );
+            }
           }
         });
 
