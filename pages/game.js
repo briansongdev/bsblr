@@ -13,6 +13,7 @@ import Alert from "@mui/material/Alert";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardActions from "@mui/material/CardActions";
+import Slider from "@mui/material/Slider";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import TimerIcon from "@mui/icons-material/Timer";
@@ -134,7 +135,6 @@ export default function Game({ isConnected }) {
                       volume: 0.1,
                     });
                     sound1.play();
-                    setDisabled(false);
                     setGuess(-1);
                     setMessage("");
                     await axios
