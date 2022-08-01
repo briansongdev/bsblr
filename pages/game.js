@@ -43,14 +43,15 @@ export default function Game({ isConnected }) {
             uid: session.user.name,
           },
         })
-        .then((res) => {
+        .then(async (res) => {
           if (res.data.currentMatch == "") {
             router.push("/");
           }
           setCurrentM(res.data.currentMatch);
+          let currGame;
           if (Object.keys(userInfo).length === 0) {
             setUserInfo(res.data);
-            axios
+            await axios
               .get("/api/game", {
                 headers: {
                   email: res.data.email,
@@ -74,12 +75,14 @@ export default function Game({ isConnected }) {
                     updateRank2(rank1.data);
                   });
                 setGameInfo(res1.data);
+                currGame = res1.data;
               });
             let myInt = setInterval(async () => {
               if (res.data.currentMatch == "") {
                 clearInterval(myInt);
                 router.push("/");
               }
+              let otherAFK = false;
               await axios
                 .get("/api/game", {
                   headers: {
@@ -89,9 +92,13 @@ export default function Game({ isConnected }) {
                   },
                 })
                 .then(async (res1) => {
+                  if (JSON.stringify(res1.data) == JSON.stringify(currGame)) {
+                    otherAFK = true;
+                  }
                   setGameInfo(res1.data);
+                  currGame = res1.data;
                   setTimer(res1.data.countdown);
-                  if (res.data.username == res1.data.player1) {
+                  if (res.data.username == res1.data.player1 || otherAFK) {
                     // subtract 1 to time every second
                     await axios.post("/api/time", {
                       email: res.data.email,
@@ -117,11 +124,22 @@ export default function Game({ isConnected }) {
                           uid: session.user.name,
                         },
                       })
-                      .then((res) => {
-                        if (res.data.currentMatch == "") {
+                      .then((res2) => {
+                        if (res2.data.currentMatch == "") {
                           clearInterval(myInt);
                           router.push("/");
                         }
+                      });
+                    await axios
+                      .get("/api/game", {
+                        headers: {
+                          email: res.data.email,
+                          password: res.data.password,
+                          gameid: res.data.currentMatch,
+                        },
+                      })
+                      .then(async (res3) => {
+                        setGameInfo(res3.data);
                       });
                   }
                 });
@@ -421,7 +439,7 @@ export default function Game({ isConnected }) {
                 <>
                   {!gameInfo.isTopInning ? (
                     <Grid item xs={6}>
-                      <Typography gutterBottom>
+                      <Typography gutterBottom variant="h5">
                         <span style={{ fontWeight: "bold" }}>
                           You are pitching!
                         </span>
@@ -492,7 +510,7 @@ export default function Game({ isConnected }) {
                     </Grid>
                   ) : (
                     <Grid item xs={6}>
-                      <Typography gutterBottom>
+                      <Typography gutterBottom variant="h5">
                         <span style={{ fontWeight: "bold" }}>
                           You are hitting!
                         </span>
@@ -568,7 +586,7 @@ export default function Game({ isConnected }) {
                 <>
                   {gameInfo.isTopInning ? (
                     <Grid item xs={6}>
-                      <Typography gutterBottom>
+                      <Typography gutterBottom variant="h5">
                         <span style={{ fontWeight: "bold" }}>
                           You are pitching!
                         </span>
@@ -640,7 +658,7 @@ export default function Game({ isConnected }) {
                     </Grid>
                   ) : (
                     <Grid item xs={6}>
-                      <Typography gutterBottom>
+                      <Typography gutterBottom variant="h5">
                         <span style={{ fontWeight: "bold" }}>
                           You are hitting!
                         </span>

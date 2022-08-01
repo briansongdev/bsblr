@@ -1,3 +1,6 @@
+// timer based on rank? (shorter timer at higher ranks)
+// lineup display bug
+
 Battery: Mark, Alex, James, Bright, Leroy
 IF: Luke, Eric, Oscar, Frank, Aaron
 OF: Nathan, Brian, Jacob, Michael, Daniel

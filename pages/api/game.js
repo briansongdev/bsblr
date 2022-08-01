@@ -32,18 +32,20 @@ export default async function handler(req, res) {
           })
           .then(async (u) => {
             if (u) {
-              let p1, p2;
+              let p1, p2, elo1, elo2;
               await db
                 .collection("account")
                 .findOne({ _id: ObjectId(u.player1) })
                 .then((c) => {
                   p1 = c.username;
+                  elo1 = c.elo;
                 });
               await db
                 .collection("account")
                 .findOne({ _id: ObjectId(u.player2) })
                 .then((c) => {
                   p2 = c.username;
+                  elo2 = c.elo;
                 });
               gameObj = {
                 player1: p1,
@@ -81,7 +83,7 @@ export default async function handler(req, res) {
                     },
                     {
                       $set: {
-                        countdown: 20,
+                        countdown: Math.floor(20000 / (elo1 + elo2 + 1000)),
                       },
                     }
                   )
