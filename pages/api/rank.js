@@ -16,7 +16,7 @@ export default async function handler(req, res) {
             });
           else if (u.elo >= 200 && u.elo < 400)
             res.json({
-              name: "SILVER",
+              name: "STEELED",
               color: "#c0c0c0",
             });
           else if (u.elo >= 400 && u.elo < 600)

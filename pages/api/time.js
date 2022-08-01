@@ -94,117 +94,126 @@ export default async function handler(req, res) {
             if (el.isTopInning) {
               // p1 is batting
               const randSeed = Math.random();
-              if (randSeed > 0.4) {
+              if (randSeed > 0.25) {
                 const score =
                   el.p1batters[el.currentBattingOrder % el.p1batters.length]
                     .strength -
                   el.p2pitcher.strength * 1.5 +
-                  200 / (Math.abs(curr1Guess - curr2Guess) + 1) -
-                  average(el.p2batters);
-                if (score < 5) {
+                  300 / (Math.abs(curr1Guess - curr2Guess) + 1) -
+                  average(el.p2batters) -
+                  20;
+                if (score < -5) {
+                  callBackMsg =
+                    el.p1batters[el.currentBattingOrder % el.p1batters.length]
+                      .name + " fouled out.";
+                  await db.collection("games").updateOne(
+                    { _id: ObjectId(req.body.gameid) },
+                    {
+                      $set: {
+                        balls: 0,
+                        strikes: 0,
+                        outs: el.outs + 1,
+                        currentBattingOrder: el.currentBattingOrder + 1,
+                      },
+                    }
+                  );
+                } else if (score >= -5 && score < 5) {
                   // swinging strike, determine if strikeout or not
-                  if (el.strikes == 2) {
-                    // strikeout
+                  if (el.manThird && el.outs < 2) {
                     callBackMsg =
                       el.p1batters[el.currentBattingOrder % el.p1batters.length]
-                        .name + " struck out!";
+                        .name + " grounded out. Runner from third scores!";
                     await db.collection("games").updateOne(
                       { _id: ObjectId(req.body.gameid) },
                       {
                         $set: {
-                          strikes: 0,
                           balls: 0,
+                          strikes: 0,
                           outs: el.outs + 1,
+                          manThird: false,
                           currentBattingOrder: el.currentBattingOrder + 1,
+                          p1runs: el.p1runs + 1,
                         },
                       }
                     );
                   } else {
                     callBackMsg =
                       el.p1batters[el.currentBattingOrder % el.p1batters.length]
-                        .name + " swung right through a strike!";
-                    await db.collection("games").updateOne(
-                      { _id: ObjectId(req.body.gameid) },
-                      {
-                        $set: {
-                          strikes: el.strikes + 1,
-                        },
-                      }
-                    );
-                  }
-                } else if (score >= 5 && score < 10) {
-                  if (el.balls == 3) {
-                    callBackMsg =
-                      el.p1batters[el.currentBattingOrder % el.p1batters.length]
-                        .name + " has walked!";
-                    if (!el.manFirst) {
+                        .name + " grounded out.";
+                    if (el.manSecond) {
                       await db.collection("games").updateOne(
                         { _id: ObjectId(req.body.gameid) },
                         {
                           $set: {
                             balls: 0,
                             strikes: 0,
+                            outs: el.outs + 1,
+                            manThird: true,
+                            manSecond: false,
                             currentBattingOrder: el.currentBattingOrder + 1,
-                            manFirst: true,
                           },
                         }
                       );
                     } else {
-                      if (!el.manSecond) {
+                      if (el.manFirst) {
                         await db.collection("games").updateOne(
                           { _id: ObjectId(req.body.gameid) },
                           {
                             $set: {
                               balls: 0,
                               strikes: 0,
-                              currentBattingOrder: el.currentBattingOrder + 1,
+                              outs: el.outs + 1,
                               manSecond: true,
+                              manFirst: false,
+                              currentBattingOrder: el.currentBattingOrder + 1,
                             },
                           }
                         );
                       } else {
-                        if (!el.manThird) {
-                          await db.collection("games").updateOne(
-                            { _id: ObjectId(req.body.gameid) },
-                            {
-                              $set: {
-                                balls: 0,
-                                strikes: 0,
-                                currentBattingOrder: el.currentBattingOrder + 1,
-                                manThird: true,
-                              },
-                            }
-                          );
-                        } else {
-                          // bases are loaded, walk someone home.
-                          callBackMsg =
-                            el.p1batters[
-                              el.currentBattingOrder % el.p1batters.length
-                            ].name + " has walked in a run!";
-                          await db.collection("games").updateOne(
-                            { _id: ObjectId(req.body.gameid) },
-                            {
-                              $set: {
-                                balls: 0,
-                                strikes: 0,
-                                currentBattingOrder: el.currentBattingOrder + 1,
-                                p1runs: el.p1runs + 1,
-                              },
-                            }
-                          );
-                        }
+                        await db.collection("games").updateOne(
+                          { _id: ObjectId(req.body.gameid) },
+                          {
+                            $set: {
+                              balls: 0,
+                              strikes: 0,
+                              outs: el.outs + 1,
+                              currentBattingOrder: el.currentBattingOrder + 1,
+                            },
+                          }
+                        );
                       }
                     }
-                  } else {
+                  }
+                } else if (score >= 5 && score < 10) {
+                  if (el.manThird && el.outs < 2) {
                     callBackMsg =
                       el.p1batters[el.currentBattingOrder % el.p1batters.length]
-                        .name + " took a ball!";
+                        .name + " got a run in with a sacrifice fly!";
                     await db.collection("games").updateOne(
                       { _id: ObjectId(req.body.gameid) },
                       {
                         $set: {
-                          balls: el.balls + 1,
+                          balls: 0,
                           strikes: 0,
+                          outs: el.outs + 1,
+                          manThird: false,
+                          currentBattingOrder: el.currentBattingOrder + 1,
+                          p1runs: el.p1runs + 1,
+                        },
+                      }
+                    );
+                  } else {
+                    callBackMsg =
+                      el.p1batters[el.currentBattingOrder % el.p1batters.length]
+                        .name + " flied out.";
+                    await db.collection("games").updateOne(
+                      { _id: ObjectId(req.body.gameid) },
+                      {
+                        $set: {
+                          balls: 0,
+                          strikes: 0,
+                          outs: el.outs + 1,
+                          currentBattingOrder: el.currentBattingOrder + 1,
                         },
                       }
                     );
@@ -375,11 +384,150 @@ export default async function handler(req, res) {
                   );
                 }
               } else {
-                if (randSeed > 0.2) {
+                if (randSeed > 0.125) {
                   // groundout, runner from third scores
-                  if (el.manThird && el.outs < 2) {
+
+                  if (el.strikes == 2) {
+                    // strikeout
                     callBackMsg =
                       el.p1batters[el.currentBattingOrder % el.p1batters.length]
+                        .name + " struck out!";
+                    await db.collection("games").updateOne(
+                      { _id: ObjectId(req.body.gameid) },
+                      {
+                        $set: {
+                          strikes: 0,
+                          balls: 0,
+                          outs: el.outs + 1,
+                          currentBattingOrder: el.currentBattingOrder + 1,
+                        },
+                      }
+                    );
+                  } else {
+                    callBackMsg =
+                      el.p1batters[el.currentBattingOrder % el.p1batters.length]
+                        .name + " swung right through a strike!";
+                    await db.collection("games").updateOne(
+                      { _id: ObjectId(req.body.gameid) },
+                      {
+                        $set: {
+                          strikes: el.strikes + 1,
+                        },
+                      }
+                    );
+                  }
+                } else {
+                  // flyout
+                  if (el.balls == 3) {
+                    callBackMsg =
+                      el.p1batters[el.currentBattingOrder % el.p1batters.length]
+                        .name + " has walked!";
+                    if (!el.manFirst) {
+                      await db.collection("games").updateOne(
+                        { _id: ObjectId(req.body.gameid) },
+                        {
+                          $set: {
+                            balls: 0,
+                            strikes: 0,
+                            currentBattingOrder: el.currentBattingOrder + 1,
+                            manFirst: true,
+                          },
+                        }
+                      );
+                    } else {
+                      if (!el.manSecond) {
+                        await db.collection("games").updateOne(
+                          { _id: ObjectId(req.body.gameid) },
+                          {
+                            $set: {
+                              balls: 0,
+                              strikes: 0,
+                              currentBattingOrder: el.currentBattingOrder + 1,
+                              manSecond: true,
+                            },
+                          }
+                        );
+                      } else {
+                        if (!el.manThird) {
+                          await db.collection("games").updateOne(
+                            { _id: ObjectId(req.body.gameid) },
+                            {
+                              $set: {
+                                balls: 0,
+                                strikes: 0,
+                                currentBattingOrder: el.currentBattingOrder + 1,
+                                manThird: true,
+                              },
+                            }
+                          );
+                        } else {
+                          // bases are loaded, walk someone home.
+                          callBackMsg =
+                            el.p1batters[
+                              el.currentBattingOrder % el.p1batters.length
+                            ].name + " has walked in a run!";
+                          await db.collection("games").updateOne(
+                            { _id: ObjectId(req.body.gameid) },
+                            {
+                              $set: {
+                                balls: 0,
+                                strikes: 0,
+                                currentBattingOrder: el.currentBattingOrder + 1,
+                                p1runs: el.p1runs + 1,
+                              },
+                            }
+                          );
+                        }
+                      }
+                    }
+                  } else {
+                    callBackMsg =
+                      el.p1batters[el.currentBattingOrder % el.p1batters.length]
+                        .name + " took a ball!";
+                    await db.collection("games").updateOne(
+                      { _id: ObjectId(req.body.gameid) },
+                      {
+                        $set: {
+                          balls: el.balls + 1,
+                          strikes: 0,
+                        },
+                      }
+                    );
+                  }
+                }
+              }
+            } else {
+              // p1 is pitching
+              const randSeed = Math.random();
+              if (randSeed > 0.25) {
+                const score =
+                  el.p2batters[el.currentPitcherPower % el.p2batters.length]
+                    .strength -
+                  el.p1pitcher.strength * 1.5 +
+                  200 / (Math.abs(curr1Guess - curr2Guess) + 1) -
+                  average(el.p1batters) -
+                  20;
+
+                if (score < -5) {
+                  callBackMsg =
+                    el.p2batters[el.currentPitcherPower % el.p2batters.length]
+                      .name + " fouled out.";
+                  await db.collection("games").updateOne(
+                    { _id: ObjectId(req.body.gameid) },
+                    {
+                      $set: {
+                        balls: 0,
+                        strikes: 0,
+                        outs: el.outs + 1,
+                        currentPitcherPower: el.currentPitcherPower + 1,
+                      },
+                    }
+                  );
+                } else if (score >= -5 && score < 5) {
+                  // swinging strike, determine if strikeout or not
+                  if (el.manThird && el.outs < 2) {
+                    callBackMsg =
+                      el.p2batters[el.currentPitcherPower % el.p2batters.length]
                         .name + " grounded out. Runner from third scores!";
                     await db.collection("games").updateOne(
                       { _id: ObjectId(req.body.gameid) },
@@ -389,14 +537,14 @@ export default async function handler(req, res) {
                           strikes: 0,
                           outs: el.outs + 1,
                           manThird: false,
-                          currentBattingOrder: el.currentBattingOrder + 1,
-                          p1runs: el.p1runs + 1,
+                          currentPitcherPower: el.currentPitcherPower + 1,
+                          p2runs: el.p2runs + 1,
                         },
                       }
                     );
                   } else {
                     callBackMsg =
-                      el.p1batters[el.currentBattingOrder % el.p1batters.length]
+                      el.p2batters[el.currentPitcherPower % el.p2batters.length]
                         .name + " grounded out.";
                     if (el.manSecond) {
                       await db.collection("games").updateOne(
@@ -408,7 +556,7 @@ export default async function handler(req, res) {
                             outs: el.outs + 1,
                             manThird: true,
                             manSecond: false,
-                            currentBattingOrder: el.currentBattingOrder + 1,
+                            currentPitcherPower: el.currentPitcherPower + 1,
                           },
                         }
                       );
@@ -423,30 +571,17 @@ export default async function handler(req, res) {
                               outs: el.outs + 1,
                               manSecond: true,
                               manFirst: false,
-                              currentBattingOrder: el.currentBattingOrder + 1,
-                            },
-                          }
-                        );
-                      } else {
-                        await db.collection("games").updateOne(
-                          { _id: ObjectId(req.body.gameid) },
-                          {
-                            $set: {
-                              balls: 0,
-                              strikes: 0,
-                              outs: el.outs + 1,
-                              currentBattingOrder: el.currentBattingOrder + 1,
+                              currentPitcherPower: el.currentPitcherPower + 1,
                             },
                           }
                         );
                       }
                     }
                   }
-                } else if (randSeed > 0.1) {
-                  // flyout
+                } else if (score >= 5 && score < 10) {
                   if (el.manThird && el.outs < 2) {
                     callBackMsg =
-                      el.p1batters[el.currentBattingOrder % el.p1batters.length]
+                      el.p2batters[el.currentPitcherPower % el.p2batters.length]
                         .name + " got a run in with a sacrifice fly!";
                     await db.collection("games").updateOne(
                       { _id: ObjectId(req.body.gameid) },
@@ -456,14 +591,14 @@ export default async function handler(req, res) {
                           strikes: 0,
                           outs: el.outs + 1,
                           manThird: false,
-                          currentBattingOrder: el.currentBattingOrder + 1,
-                          p1runs: el.p1runs + 1,
+                          currentPitcherPower: el.currentPitcherPower + 1,
+                          p2runs: el.p2runs + 1,
                         },
                       }
                     );
                   } else {
                     callBackMsg =
-                      el.p1batters[el.currentBattingOrder % el.p1batters.length]
+                      el.p2batters[el.currentPitcherPower % el.p2batters.length]
                         .name + " flied out.";
                     await db.collection("games").updateOne(
                       { _id: ObjectId(req.body.gameid) },
@@ -472,143 +607,7 @@ export default async function handler(req, res) {
                           balls: 0,
                           strikes: 0,
                           outs: el.outs + 1,
-                          currentBattingOrder: el.currentBattingOrder + 1,
-                        },
-                      }
-                    );
-                  }
-                } else {
-                  // foulout
-                  callBackMsg =
-                    el.p1batters[el.currentBattingOrder % el.p1batters.length]
-                      .name + " fouled out.";
-                  await db.collection("games").updateOne(
-                    { _id: ObjectId(req.body.gameid) },
-                    {
-                      $set: {
-                        balls: 0,
-                        strikes: 0,
-                        outs: el.outs + 1,
-                        currentBattingOrder: el.currentBattingOrder + 1,
-                      },
-                    }
-                  );
-                }
-              }
-            } else {
-              // p1 is pitching
-              const randSeed = Math.random();
-              if (randSeed > 0.4) {
-                const score =
-                  el.p2batters[el.currentPitcherPower % el.p2batters.length]
-                    .strength -
-                  el.p1pitcher.strength * 1.5 +
-                  200 / (Math.abs(curr1Guess - curr2Guess) + 1) -
-                  average(el.p1batters);
-
-                if (score < 5) {
-                  // swinging strike, determine if strikeout or not
-                  if (el.strikes == 2) {
-                    // strikeout
-                    callBackMsg =
-                      el.p2batters[el.currentPitcherPower % el.p2batters.length]
-                        .name + " struck out!";
-                    await db.collection("games").updateOne(
-                      { _id: ObjectId(req.body.gameid) },
-                      {
-                        $set: {
-                          strikes: 0,
-                          balls: 0,
-                          outs: el.outs + 1,
                           currentPitcherPower: el.currentPitcherPower + 1,
-                        },
-                      }
-                    );
-                  } else {
-                    callBackMsg =
-                      el.p2batters[el.currentPitcherPower % el.p2batters.length]
-                        .name + " swung right through a strike!";
-                    await db.collection("games").updateOne(
-                      { _id: ObjectId(req.body.gameid) },
-                      {
-                        $set: {
-                          strikes: el.strikes + 1,
-                        },
-                      }
-                    );
-                  }
-                } else if (score >= 5 && score < 10) {
-                  if (el.balls == 3) {
-                    callBackMsg =
-                      el.p2batters[el.currentPitcherPower % el.p2batters.length]
-                        .name + " has walked!";
-                    if (!el.manFirst) {
-                      await db.collection("games").updateOne(
-                        { _id: ObjectId(req.body.gameid) },
-                        {
-                          $set: {
-                            balls: 0,
-                            strikes: 0,
-                            currentPitcherPower: el.currentPitcherPower + 1,
-                            manFirst: true,
-                          },
-                        }
-                      );
-                    } else {
-                      if (!el.manSecond) {
-                        await db.collection("games").updateOne(
-                          { _id: ObjectId(req.body.gameid) },
-                          {
-                            $set: {
-                              balls: 0,
-                              strikes: 0,
-                              currentPitcherPower: el.currentPitcherPower + 1,
-                              manSecond: true,
-                            },
-                          }
-                        );
-                      } else {
-                        if (!el.manThird) {
-                          await db.collection("games").updateOne(
-                            { _id: ObjectId(req.body.gameid) },
-                            {
-                              $set: {
-                                balls: 0,
-                                strikes: 0,
-                                currentPitcherPower: el.currentPitcherPower + 1,
-                                manThird: true,
-                              },
-                            }
-                          );
-                        } else {
-                          // bases are loaded, walk someone home.
-                          callBackMsg =
-                            el.p2batters[
-                              el.currentPitcherPower % el.p2batters.length
-                            ].name + " has walked in a run!";
-                          await db.collection("games").updateOne(
-                            { _id: ObjectId(req.body.gameid) },
-                            {
-                              $set: {
-                                balls: 0,
-                                strikes: 0,
-                                currentPitcherPower: el.currentPitcherPower + 1,
-                                p2runs: el.p2runs + 1,
-                              },
-                            }
-                          );
-                        }
-                      }
-                    }
-                  } else {
-                    callBackMsg =
-                      el.p2batters[el.currentPitcherPower % el.p2batters.length]
-                        .name + " took a ball!";
-                    await db.collection("games").updateOne(
-                      { _id: ObjectId(req.body.gameid) },
-                      {
-                        $set: {
-                          balls: el.balls + 1,
                         },
                       }
                     );
@@ -776,112 +775,113 @@ export default async function handler(req, res) {
                   );
                 }
               } else {
-                if (randSeed > 0.2) {
-                  // groundout, runner from third scores
-                  if (el.manThird && el.outs < 2) {
+                if (randSeed > 0.125) {
+                  if (el.strikes == 2) {
+                    // strikeout
                     callBackMsg =
                       el.p2batters[el.currentPitcherPower % el.p2batters.length]
-                        .name + " grounded out. Runner from third scores!";
+                        .name + " struck out!";
                     await db.collection("games").updateOne(
                       { _id: ObjectId(req.body.gameid) },
                       {
                         $set: {
-                          balls: 0,
                           strikes: 0,
+                          balls: 0,
                           outs: el.outs + 1,
-                          manThird: false,
                           currentPitcherPower: el.currentPitcherPower + 1,
-                          p2runs: el.p2runs + 1,
                         },
                       }
                     );
                   } else {
                     callBackMsg =
                       el.p2batters[el.currentPitcherPower % el.p2batters.length]
-                        .name + " grounded out.";
-                    if (el.manSecond) {
+                        .name + " swung right through a strike!";
+                    await db.collection("games").updateOne(
+                      { _id: ObjectId(req.body.gameid) },
+                      {
+                        $set: {
+                          strikes: el.strikes + 1,
+                        },
+                      }
+                    );
+                  }
+                } else {
+                  // flyout
+                  if (el.balls == 3) {
+                    callBackMsg =
+                      el.p2batters[el.currentPitcherPower % el.p2batters.length]
+                        .name + " has walked!";
+                    if (!el.manFirst) {
                       await db.collection("games").updateOne(
                         { _id: ObjectId(req.body.gameid) },
                         {
                           $set: {
                             balls: 0,
                             strikes: 0,
-                            outs: el.outs + 1,
-                            manThird: true,
-                            manSecond: false,
                             currentPitcherPower: el.currentPitcherPower + 1,
+                            manFirst: true,
                           },
                         }
                       );
                     } else {
-                      if (el.manFirst) {
+                      if (!el.manSecond) {
                         await db.collection("games").updateOne(
                           { _id: ObjectId(req.body.gameid) },
                           {
                             $set: {
                               balls: 0,
                               strikes: 0,
-                              outs: el.outs + 1,
-                              manSecond: true,
-                              manFirst: false,
                               currentPitcherPower: el.currentPitcherPower + 1,
+                              manSecond: true,
                             },
                           }
                         );
+                      } else {
+                        if (!el.manThird) {
+                          await db.collection("games").updateOne(
+                            { _id: ObjectId(req.body.gameid) },
+                            {
+                              $set: {
+                                balls: 0,
+                                strikes: 0,
+                                currentPitcherPower: el.currentPitcherPower + 1,
+                                manThird: true,
+                              },
+                            }
+                          );
+                        } else {
+                          // bases are loaded, walk someone home.
+                          callBackMsg =
+                            el.p2batters[
+                              el.currentPitcherPower % el.p2batters.length
+                            ].name + " has walked in a run!";
+                          await db.collection("games").updateOne(
+                            { _id: ObjectId(req.body.gameid) },
+                            {
+                              $set: {
+                                balls: 0,
+                                strikes: 0,
+                                currentPitcherPower: el.currentPitcherPower + 1,
+                                p2runs: el.p2runs + 1,
+                              },
+                            }
+                          );
+                        }
                       }
                     }
-                  }
-                } else if (randSeed > 0.1) {
-                  // flyout
-                  if (el.manThird && el.outs < 2) {
-                    callBackMsg =
-                      el.p2batters[el.currentPitcherPower % el.p2batters.length]
-                        .name + " got a run in with a sacrifice fly!";
-                    await db.collection("games").updateOne(
-                      { _id: ObjectId(req.body.gameid) },
-                      {
-                        $set: {
-                          balls: 0,
-                          strikes: 0,
-                          outs: el.outs + 1,
-                          manThird: false,
-                          currentPitcherPower: el.currentPitcherPower + 1,
-                          p2runs: el.p2runs + 1,
-                        },
-                      }
-                    );
                   } else {
                     callBackMsg =
                       el.p2batters[el.currentPitcherPower % el.p2batters.length]
-                        .name + " flied out.";
+                        .name + " took a ball!";
                     await db.collection("games").updateOne(
                       { _id: ObjectId(req.body.gameid) },
                       {
                         $set: {
-                          balls: 0,
-                          strikes: 0,
-                          outs: el.outs + 1,
-                          currentPitcherPower: el.currentPitcherPower + 1,
+                          balls: el.balls + 1,
                         },
                       }
                     );
                   }
-                } else {
-                  // foulout
-                  callBackMsg =
-                    el.p2batters[el.currentPitcherPower % el.p2batters.length]
-                      .name + " fouled out.";
-                  await db.collection("games").updateOne(
-                    { _id: ObjectId(req.body.gameid) },
-                    {
-                      $set: {
-                        balls: 0,
-                        strikes: 0,
-                        outs: el.outs + 1,
-                        currentPitcherPower: el.currentPitcherPower + 1,
-                      },
-                    }
-                  );
                 }
               }
             }

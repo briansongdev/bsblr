@@ -59,7 +59,7 @@ const ranks = [
     color: "#a08679",
   },
   {
-    name: "SILVER",
+    name: "STEELED",
     color: "#c0c0c0",
   },
   {
