@@ -288,10 +288,16 @@ export default function Game({ isConnected }) {
                     color="error"
                     size="small"
                     onClick={async () => {
-                      await axios.post("/api/forfeit", {
-                        email: userInfo.email,
-                        password: userInfo.password,
-                      });
+                      if (
+                        confirm(
+                          "Forfeit match? You will lose rating if you are in a competitive match."
+                        )
+                      ) {
+                        await axios.post("/api/forfeit", {
+                          email: userInfo.email,
+                          password: userInfo.password,
+                        });
+                      }
                     }}
                   >
                     Forfeit match{" "}
