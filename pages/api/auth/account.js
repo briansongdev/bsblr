@@ -46,6 +46,13 @@ export default async function handler(req, res) {
       try {
         // connect to the database
         // add the account
+        const levelRewards = [];
+        for (let i = 1; i <= 1500; i++) {
+          levelRewards.push({
+            level: i,
+            claimed: false,
+          });
+        }
         let newBody = {
           email: req.body.email,
           password: hash,
@@ -62,12 +69,124 @@ export default async function handler(req, res) {
               fieldCom: 10,
               strength: 10,
             },
+            {
+              position: "IF/OF",
+              name: "Luke",
+              pitchCom: 0,
+              fieldCom: 10,
+              strength: 10,
+            },
+            {
+              position: "IF/OF",
+              name: "Eric",
+              pitchCom: 0,
+              fieldCom: 10,
+              strength: 10,
+            },
+            {
+              position: "IF/OF",
+              name: "Oscar",
+              pitchCom: 0,
+              fieldCom: 10,
+              strength: 10,
+            },
+            {
+              position: "IF/OF",
+              name: "Frank",
+              pitchCom: 0,
+              fieldCom: 10,
+              strength: 10,
+            },
+            {
+              position: "IF/OF",
+              name: "Aaron",
+              pitchCom: 0,
+              fieldCom: 10,
+              strength: 10,
+            },
+            {
+              position: "IF/OF",
+              name: "Nathan",
+              pitchCom: 0,
+              fieldCom: 10,
+              strength: 10,
+            },
+            {
+              position: "IF/OF",
+              name: "Brian",
+              pitchCom: 0,
+              fieldCom: 10,
+              strength: 10,
+            },
+            {
+              position: "IF/OF",
+              name: "Jacob",
+              pitchCom: 0,
+              fieldCom: 10,
+              strength: 10,
+            },
           ],
           lineup: [
             {
               position: "P",
               name: "Mark",
               pitchCom: 10,
+              fieldCom: 10,
+              strength: 10,
+            },
+            {
+              position: "IF/OF",
+              name: "Luke",
+              pitchCom: 0,
+              fieldCom: 10,
+              strength: 10,
+            },
+            {
+              position: "IF/OF",
+              name: "Eric",
+              pitchCom: 0,
+              fieldCom: 10,
+              strength: 10,
+            },
+            {
+              position: "IF/OF",
+              name: "Oscar",
+              pitchCom: 0,
+              fieldCom: 10,
+              strength: 10,
+            },
+            {
+              position: "IF/OF",
+              name: "Frank",
+              pitchCom: 0,
+              fieldCom: 10,
+              strength: 10,
+            },
+            {
+              position: "IF/OF",
+              name: "Aaron",
+              pitchCom: 0,
+              fieldCom: 10,
+              strength: 10,
+            },
+            {
+              position: "IF/OF",
+              name: "Nathan",
+              pitchCom: 0,
+              fieldCom: 10,
+              strength: 10,
+            },
+            {
+              position: "IF/OF",
+              name: "Brian",
+              pitchCom: 0,
+              fieldCom: 10,
+              strength: 10,
+            },
+            {
+              position: "IF/OF",
+              name: "Jacob",
+              pitchCom: 0,
               fieldCom: 10,
               strength: 10,
             },
@@ -80,6 +199,7 @@ export default async function handler(req, res) {
             strength: 10,
           },
           matchHistory: [],
+          levelRewards: levelRewards,
           exp: 1000,
           tickets: 100,
           currentMatch: "",

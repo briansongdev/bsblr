@@ -11,6 +11,39 @@ h1 {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+#specialPlayerIcon {
+  background: -webkit-linear-gradient(
+    -45deg,
+    #ee7752,
+    #e73c7e,
+    #23a6d5,
+    #23d5ab
+  );
+  background: -moz-linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+#fire-text {
+  text-shadow: 2px -2px 8px yellow, 2px -6px 8px red, 2px -6px 8px red;
+  animation-name: flamingText;
+  animation-duration: 1.2s;
+  animation-iteration-count: infinite;
+}
+
+@keyframes flamingText {
+  0% {
+    text-shadow: 2px -2px 8px yellow, 2px -6px 8px red, 2px -6px 8px red;
+  }
+  50% {
+    text-shadow: 2px -2px 8px yellow, 2px -6px 8px red, 2px -6px 8px red,
+      2px -10px 8px red, 2px 2px 8px yellow, 2px 6px 8px red;
+  }
+  100% {
+    text-shadow: 2px -2px 8px yellow, 2px -6px 8px red, 2px -6px 8px red;
+  }
+}
 
 #highRankIcon {
   background: -webkit-linear-gradient(

@@ -749,40 +749,113 @@ export default function Home({ isConnected }) {
                   </Typography>
                 </Grid>
               </Grid>
-              <Typography
-                sx={{
-                  color:
-                    ranks[
-                      Math.min(ranks.length - 1, Math.floor(userInfo.elo / 200))
-                    ] != undefined
-                      ? ranks[
+              <Grid
+                container
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <Grid item>
+                  <Typography
+                    sx={{
+                      color:
+                        ranks[
                           Math.min(
                             ranks.length - 1,
                             Math.floor(userInfo.elo / 200)
                           )
-                        ].color
-                      : "grey",
-                  mt: -1,
-                }}
-                id={
-                  ranks[
-                    Math.min(ranks.length - 1, Math.floor(userInfo.elo / 200))
-                  ] != undefined
-                    ? ranks[
+                        ] != undefined
+                          ? ranks[
+                              Math.min(
+                                ranks.length - 1,
+                                Math.floor(userInfo.elo / 200)
+                              )
+                            ].color
+                          : "grey",
+                      mt: -1,
+                    }}
+                    id={
+                      ranks[
                         Math.min(
                           ranks.length - 1,
                           Math.floor(userInfo.elo / 200)
                         )
-                      ].color
-                    : ""
-                }
-              >
-                {ranks[
-                  Math.min(ranks.length - 1, Math.floor(userInfo.elo / 200))
-                ].color == "highRankIcon"
-                  ? userInfo.elo + "/1000"
-                  : (userInfo.elo % 200) + "/200"}
-              </Typography>
+                      ] != undefined
+                        ? ranks[
+                            Math.min(
+                              ranks.length - 1,
+                              Math.floor(userInfo.elo / 200)
+                            )
+                          ].color
+                        : ""
+                    }
+                  >
+                    {ranks[
+                      Math.min(ranks.length - 1, Math.floor(userInfo.elo / 200))
+                    ].color == "highRankIcon"
+                      ? userInfo.elo + "/1000"
+                      : (userInfo.elo % 200) + "/200"}
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <Typography sx={{ mt: -1 }}>
+                    <span
+                      style={{
+                        color:
+                          ranks[
+                            Math.min(
+                              ranks.length - 1,
+                              Math.floor(userInfo.elo / 200) + 1
+                            )
+                          ] != undefined
+                            ? ranks[
+                                Math.min(
+                                  ranks.length - 1,
+                                  Math.floor(userInfo.elo / 200) + 1
+                                )
+                              ].color
+                            : "grey",
+                        mt: -1,
+                      }}
+                      id={
+                        ranks[
+                          Math.min(
+                            ranks.length - 1,
+                            Math.floor(userInfo.elo / 200) + 1
+                          )
+                        ] != undefined
+                          ? ranks[
+                              Math.min(
+                                ranks.length - 1,
+                                Math.floor(userInfo.elo / 200) + 1
+                              )
+                            ].color
+                          : ""
+                      }
+                    >
+                      {ranks[
+                        Math.min(
+                          ranks.length - 1,
+                          Math.floor(userInfo.elo / 200) + 1
+                        )
+                      ] != undefined &&
+                      ranks[
+                        Math.min(
+                          ranks.length - 1,
+                          Math.floor(userInfo.elo / 200) + 1
+                        )
+                      ].name != "SHIMMERING"
+                        ? ranks[
+                            Math.min(
+                              ranks.length - 1,
+                              Math.floor(userInfo.elo / 200) + 1
+                            )
+                          ].name
+                        : ""}
+                    </span>
+                  </Typography>
+                </Grid>
+              </Grid>
               {ranks[Math.min(ranks.length - 1, Math.floor(userInfo.elo / 200))]
                 .color == "highRankIcon" ? (
                 <></>
@@ -939,6 +1012,9 @@ export default function Home({ isConnected }) {
               <Button
                 variant="contained"
                 sx={{ width: "100%", borderRadius: "15px", mt: 2 }}
+                onClick={() => {
+                  router.push("/acquire");
+                }}
               >
                 Acquire Players
               </Button>
@@ -1054,8 +1130,9 @@ export default function Home({ isConnected }) {
             <CircularProgress color="success" />
             <DialogContentText>
               You will be matched with someone with similar rank, if you are
-              queueing for ranked play.{" "}
+              queueing for ranked play.
               <Typography color="text.secondary">
+                <br />
                 Please don't reload or close the tab.
               </Typography>
             </DialogContentText>
@@ -1071,9 +1148,11 @@ export default function Home({ isConnected }) {
           >
             <CircularProgress color="success" />
             <DialogContentText>
-              Once your friend also clicks to friendly battle you, you both will
-              be matched into a game.{" "}
+              Once your friend also selects to friendly battle you (or is
+              currently in an unranked queue), you both will be matched into a
+              game.
               <Typography color="text.secondary">
+                <br />
                 Please don't reload or close the tab.
               </Typography>
             </DialogContentText>

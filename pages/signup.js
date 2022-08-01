@@ -102,6 +102,9 @@ export default function Signup() {
             Submit
           </Button>
         </form>
+        <Button sx={{ mt: 1 }} onClick={() => router.push("/login")}>
+          Already have an account?
+        </Button>
       </Grid>
       <br />
     </Container>

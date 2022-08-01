@@ -81,6 +81,9 @@ export default function Login() {
             Submit
           </Button>
         </form>
+        <Button sx={{ mt: 1 }} onClick={() => router.push("/signup")}>
+          Register for an account
+        </Button>
       </Grid>
       <br />
     </Container>
