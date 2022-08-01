@@ -504,7 +504,7 @@ export default async function handler(req, res) {
                   el.p2batters[el.currentPitcherPower % el.p2batters.length]
                     .strength -
                   el.p1pitcher.strength * 1.5 +
-                  200 / (Math.abs(curr1Guess - curr2Guess) + 1) -
+                  300 / (Math.abs(curr1Guess - curr2Guess) + 1) -
                   average(el.p1batters) -
                   20;
 
