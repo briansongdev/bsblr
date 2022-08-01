@@ -1021,10 +1021,10 @@ export default function Home({ isConnected }) {
               <Button
                 variant="outlined"
                 sx={{ width: "100%", borderRadius: "15px", mt: 2 }}
+                onClick={() => alert("Coming soon!")}
               >
                 Tutorial
               </Button>
-              {/* acquire new players, tutorial */}
             </Grid>
             <Grid item xs={3}>
               <Grid

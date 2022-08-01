@@ -333,10 +333,24 @@ export default function Game({ isConnected }) {
                         Stats:
                       </Typography>
                       <Typography color="text.secondary">
-                        Pitching Power: {gameInfo.p2pitcher.pitchCom}
+                        Pitching Power:{" "}
+                        {gameInfo.p2pitcher.pitchCom >= 25 ? (
+                          <span id="fire-text">
+                            {gameInfo.p2pitcher.pitchCom}
+                          </span>
+                        ) : (
+                          <>{gameInfo.p2pitcher.pitchCom}</>
+                        )}
                       </Typography>
                       <Typography color="text.secondary">
-                        Base Velocity: {gameInfo.p2pitcher.strength * 7}
+                        Base Velocity:{" "}
+                        {gameInfo.p2pitcher.strength >= 25 ? (
+                          <span id="fire-text">
+                            {gameInfo.p2pitcher.pitchCom * 7}
+                          </span>
+                        ) : (
+                          <>{gameInfo.p2pitcher.strength * 7}</>
+                        )}
                       </Typography>{" "}
                       <Typography>Past velocities and guesses:</Typography>
                       {gameInfo.pastFewPitches
@@ -368,10 +382,24 @@ export default function Game({ isConnected }) {
                         Stats:
                       </Typography>
                       <Typography color="text.secondary">
-                        Pitching Power: {gameInfo.p1pitcher.pitchCom}
+                        Pitching Power:{" "}
+                        {gameInfo.p1pitcher.pitchCom >= 25 ? (
+                          <span id="fire-text">
+                            {gameInfo.p1pitcher.pitchCom}
+                          </span>
+                        ) : (
+                          <>{gameInfo.p1pitcher.pitchCom}</>
+                        )}
                       </Typography>
                       <Typography color="text.secondary">
-                        Base Velocity: {gameInfo.p2pitcher.strength * 7}
+                        Base Velocity:{" "}
+                        {gameInfo.p1pitcher.strength >= 25 ? (
+                          <span id="fire-text">
+                            {gameInfo.p1pitcher.pitchCom * 7}
+                          </span>
+                        ) : (
+                          <>{gameInfo.p1pitcher.strength * 7}</>
+                        )}
                       </Typography>
                       <Typography>Past velocities and guesses:</Typography>
                       {gameInfo.pastFewPitches
@@ -713,27 +741,59 @@ export default function Game({ isConnected }) {
                       </Typography>
                       <Typography color="text.secondary">
                         Fielding Score:{" "}
-                        {
-                          gameInfo.p1batters[
-                            gameInfo.currentBattingOrder %
-                              gameInfo.p1batters.length
-                          ].fieldCom
-                        }
+                        {gameInfo.p1batters[
+                          gameInfo.currentBattingOrder %
+                            gameInfo.p1batters.length
+                        ].fieldCom >= 25 ? (
+                          <span id="fire-text">
+                            {
+                              gameInfo.p1batters[
+                                gameInfo.currentBattingOrder %
+                                  gameInfo.p1batters.length
+                              ].fieldCom
+                            }
+                          </span>
+                        ) : (
+                          <>
+                            {
+                              gameInfo.p1batters[
+                                gameInfo.currentBattingOrder %
+                                  gameInfo.p1batters.length
+                              ].fieldCom
+                            }
+                          </>
+                        )}
                       </Typography>
                       <Typography color="text.secondary">
                         Hitting Strength:{" "}
-                        {
-                          gameInfo.p1batters[
-                            gameInfo.currentBattingOrder %
-                              gameInfo.p1batters.length
-                          ].strength
-                        }
+                        {gameInfo.p1batters[
+                          gameInfo.currentBattingOrder %
+                            gameInfo.p1batters.length
+                        ].strength >= 25 ? (
+                          <span id="fire-text">
+                            {
+                              gameInfo.p1batters[
+                                gameInfo.currentBattingOrder %
+                                  gameInfo.p1batters.length
+                              ].strength
+                            }
+                          </span>
+                        ) : (
+                          <>
+                            {
+                              gameInfo.p1batters[
+                                gameInfo.currentBattingOrder %
+                                  gameInfo.p1batters.length
+                              ].strength
+                            }
+                          </>
+                        )}
                       </Typography>{" "}
                       <Typography>
                         {gameInfo.p1batters[
                           gameInfo.currentBattingOrder %
                             gameInfo.p1batters.length
-                        ].strength > 50
+                        ].strength > 25
                           ? "A surefire power hitter."
                           : "Utility, contact man who can set up productive innings."}
                       </Typography>
@@ -767,27 +827,59 @@ export default function Game({ isConnected }) {
                       </Typography>
                       <Typography color="text.secondary">
                         Fielding Score:{" "}
-                        {
-                          gameInfo.p2batters[
-                            gameInfo.currentPitcherPower %
-                              gameInfo.p2batters.length
-                          ].fieldCom
-                        }
+                        {gameInfo.p2batters[
+                          gameInfo.currentBattingOrder %
+                            gameInfo.p2batters.length
+                        ].fieldCom >= 25 ? (
+                          <span id="fire-text">
+                            {
+                              gameInfo.p2batters[
+                                gameInfo.currentBattingOrder %
+                                  gameInfo.p2batters.length
+                              ].fieldCom
+                            }
+                          </span>
+                        ) : (
+                          <>
+                            {
+                              gameInfo.p2batters[
+                                gameInfo.currentBattingOrder %
+                                  gameInfo.p2batters.length
+                              ].fieldCom
+                            }
+                          </>
+                        )}
                       </Typography>
                       <Typography color="text.secondary">
                         Hitting Strength:{" "}
-                        {
-                          gameInfo.p2batters[
-                            gameInfo.currentPitcherPower %
-                              gameInfo.p2batters.length
-                          ].strength
-                        }
+                        {gameInfo.p2batters[
+                          gameInfo.currentBattingOrder %
+                            gameInfo.p2batters.length
+                        ].strength >= 25 ? (
+                          <span id="fire-text">
+                            {
+                              gameInfo.p2batters[
+                                gameInfo.currentBattingOrder %
+                                  gameInfo.p2batters.length
+                              ].strength
+                            }
+                          </span>
+                        ) : (
+                          <>
+                            {
+                              gameInfo.p2batters[
+                                gameInfo.currentBattingOrder %
+                                  gameInfo.p2batters.length
+                              ].strength
+                            }
+                          </>
+                        )}
                       </Typography>{" "}
                       <Typography>
                         {gameInfo.p2batters[
                           gameInfo.currentPitcherPower %
                             gameInfo.p2batters.length
-                        ].strength > 50
+                        ].strength > 25
                           ? "A surefire power hitter."
                           : "Utility, contact man who can set up productive innings."}
                       </Typography>

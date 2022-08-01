@@ -32,7 +32,10 @@ export default function Home({ isConnected }) {
   const [isLoading, setLoading] = useState(true);
   const [messagee, setMessagee] = useState("");
   const [open, setOpen] = useState(false);
+  const [open1, setOpen1] = useState(false);
   const [currentlySelectedPlayer, setCurrentPlayer] = useState({});
+  const [currentlySelectedHitter, setCurrentHitter] = useState({});
+  const [currentlySelectedHitterInd, setCurrentHitterInd] = useState(-1);
 
   const handleClose = async () => {
     await axios.post("/api/setPitcher", {
@@ -57,6 +60,32 @@ export default function Home({ isConnected }) {
         if (res.data.currentMatch != "") router.push("/game");
       });
     setOpen(false);
+  };
+  const handleClose1 = async () => {
+    await axios.post("/api/setHitter", {
+      email: userInfo.email,
+      password: userInfo.password,
+      hitterToChange: JSON.stringify(currentlySelectedHitter),
+      hitterIndex: currentlySelectedHitterInd,
+    });
+    const data = await axios
+      .get("/api/auth/account", {
+        headers: {
+          uid: session.user.name,
+        },
+      })
+      .then((res) => {
+        res.data.players.sort((a, b) => {
+          let totalSumA = a.pitchCom + a.fieldCom + a.strength,
+            totalSumB = b.pitchCom + b.fieldCom + b.strength;
+          return totalSumA > totalSumB ? -1 : 1;
+        });
+        setUserInfo(res.data);
+        setCurrentHitter({});
+        setCurrentHitterInd(-1);
+        if (res.data.currentMatch != "") router.push("/game");
+      });
+    setOpen1(false);
   };
 
   const loading = status === "loading";
@@ -338,7 +367,15 @@ export default function Home({ isConnected }) {
                           </Typography>
                         </CardContent>
                         <CardActions>
-                          <Button>Change #{ind + 1} player</Button>
+                          <Button
+                            onClick={() => {
+                              setOpen1(true);
+                              setCurrentHitter(d);
+                              setCurrentHitterInd(ind);
+                            }}
+                          >
+                            Change #{ind + 1} player
+                          </Button>
                         </CardActions>
                       </Card>
                     );
@@ -543,6 +580,90 @@ export default function Home({ isConnected }) {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>Select</Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={open1}>
+          <DialogTitle>Change Current Hitter</DialogTitle>
+          <DialogContent
+            sx={{ textAlign: "center", justifyContent: "content" }}
+          >
+            <Grid
+              container
+              direction="row"
+              justifyContent="center"
+              alignItems="center"
+            >
+              {userInfo.players.map((d) => {
+                return (
+                  <Grid item>
+                    <Paper
+                      elevation={1}
+                      style={{
+                        width: "200px",
+                        overflow: "auto",
+                        margin: "5px 5px 5px 5px",
+                      }}
+                    >
+                      <IconButton
+                        sx={{
+                          borderRadius: 0,
+                          width: "100%",
+                          height: "100%",
+                        }}
+                        color={
+                          JSON.stringify(d) ==
+                          JSON.stringify(currentlySelectedHitter)
+                            ? "primary"
+                            : "inherit"
+                        }
+                        onClick={() => {
+                          setCurrentHitter(d);
+                        }}
+                      >
+                        <Grid
+                          container
+                          direction="column"
+                          justifyContent="center"
+                          alignItems="center"
+                        >
+                          <Grid item>
+                            <Typography sx={{ mb: 1.5 }}>
+                              <strong>
+                                {d.name} - {d.position}
+                              </strong>
+                            </Typography>
+                          </Grid>
+                          <Grid item>
+                            <Typography>
+                              Fielding score:
+                              {d.fieldCom >= 25 ? (
+                                <span id="fire-text"> {d.fieldCom}</span>
+                              ) : (
+                                <> {d.fieldCom}</>
+                              )}
+                            </Typography>
+                          </Grid>
+                          <Grid item>
+                            <Typography>
+                              Strength:{" "}
+                              {d.strength >= 25 ? (
+                                <span id="fire-text"> {d.strength}</span>
+                              ) : (
+                                <> {d.strength}</>
+                              )}
+                            </Typography>
+                          </Grid>{" "}
+                        </Grid>
+                      </IconButton>
+                    </Paper>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose1}>Select</Button>
           </DialogActions>
         </Dialog>
       </>

@@ -11,7 +11,8 @@ import { ObjectId } from "mongodb";
 export default async function handler(req, res) {
   const client = await clientPromise;
   const db = client.db("bsblDB");
-  let isAuthenticated = false;
+  let isAuthenticated = false,
+    players;
   if (req.method == "POST") {
     // check valid authentication, if username and passwords count. then check if id is in queue right now
     await db
@@ -22,10 +23,16 @@ export default async function handler(req, res) {
           if (u.password == req.body.password) {
             // authenticated
             isAuthenticated = true;
+            players = u.players;
           }
         }
       });
-    if (isAuthenticated) {
+    if (
+      isAuthenticated &&
+      players
+        .map((s) => JSON.stringify(s))
+        .some((s) => s == req.body.pitcherToChange)
+    ) {
       await db.collection("account").updateOne(
         { email: req.body.email },
         {
