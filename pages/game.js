@@ -439,8 +439,8 @@ export default function Game({ isConnected }) {
                 <>
                   {!gameInfo.isTopInning ? (
                     <Grid item xs={6}>
-                      <Typography gutterBottom variant="h5">
-                        <span style={{ fontWeight: "bold" }}>
+                      <Typography gutterBottom>
+                        <span style={{ fontWeight: "bold", fontSize: "30px" }}>
                           You are pitching!
                         </span>
                         <br />
@@ -510,8 +510,8 @@ export default function Game({ isConnected }) {
                     </Grid>
                   ) : (
                     <Grid item xs={6}>
-                      <Typography gutterBottom variant="h5">
-                        <span style={{ fontWeight: "bold" }}>
+                      <Typography gutterBottom>
+                        <span style={{ fontWeight: "bold", fontSize: "30px" }}>
                           You are hitting!
                         </span>
                         <br />
@@ -586,8 +586,8 @@ export default function Game({ isConnected }) {
                 <>
                   {gameInfo.isTopInning ? (
                     <Grid item xs={6}>
-                      <Typography gutterBottom variant="h5">
-                        <span style={{ fontWeight: "bold" }}>
+                      <Typography gutterBottom>
+                        <span style={{ fontWeight: "bold", fontSize: "30px" }}>
                           You are pitching!
                         </span>
                         <br />
@@ -658,8 +658,8 @@ export default function Game({ isConnected }) {
                     </Grid>
                   ) : (
                     <Grid item xs={6}>
-                      <Typography gutterBottom variant="h5">
-                        <span style={{ fontWeight: "bold" }}>
+                      <Typography gutterBottom>
+                        <span style={{ fontWeight: "bold", fontSize: "30px" }}>
                           You are hitting!
                         </span>
                         <br />
