@@ -444,7 +444,7 @@ export default async function handler(req, res) {
                   }
                 } else if (randSeed > 0.1) {
                   // flyout
-                  if (el.manThird) {
+                  if (el.manThird && el.outs < 2) {
                     callBackMsg =
                       el.p1batters[el.currentBattingOrder % el.p1batters.length]
                         .name + " got a run in with a sacrifice fly!";
@@ -609,7 +609,6 @@ export default async function handler(req, res) {
                       {
                         $set: {
                           balls: el.balls + 1,
-                          strikes: 0,
                         },
                       }
                     );
@@ -779,7 +778,7 @@ export default async function handler(req, res) {
               } else {
                 if (randSeed > 0.2) {
                   // groundout, runner from third scores
-                  if (el.manThird) {
+                  if (el.manThird && el.outs < 2) {
                     callBackMsg =
                       el.p2batters[el.currentPitcherPower % el.p2batters.length]
                         .name + " grounded out. Runner from third scores!";
@@ -834,7 +833,7 @@ export default async function handler(req, res) {
                   }
                 } else if (randSeed > 0.1) {
                   // flyout
-                  if (el.manThird) {
+                  if (el.manThird && el.outs < 2) {
                     callBackMsg =
                       el.p2batters[el.currentPitcherPower % el.p2batters.length]
                         .name + " got a run in with a sacrifice fly!";
@@ -891,7 +890,9 @@ export default async function handler(req, res) {
                 { _id: ObjectId(req.body.gameid) },
                 {
                   $set: {
-                    countdown: Math.floor(20000 / (elo1 + elo2 + 1000)),
+                    countdown: Math.floor(
+                      20000 / (0.5 * elo1 + 0.5 * elo2 + 1000)
+                    ),
                     p1currGuess: -1,
                     p2currGuess: -1,
                   },
@@ -909,7 +910,9 @@ export default async function handler(req, res) {
                 { _id: ObjectId(req.body.gameid) },
                 {
                   $set: {
-                    countdown: Math.floor(20000 / (elo1 + elo2 + 1000)),
+                    countdown: Math.floor(
+                      20000 / (0.5 * elo1 + 0.5 * elo2 + 1000)
+                    ),
                     p1currGuess: -1,
                     p2currGuess: -1,
                   },

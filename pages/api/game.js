@@ -83,7 +83,9 @@ export default async function handler(req, res) {
                     },
                     {
                       $set: {
-                        countdown: Math.floor(20000 / (elo1 + elo2 + 1000)),
+                        countdown: Math.floor(
+                          20000 / (0.5 * elo1 + 0.5 * elo2 + 1000)
+                        ),
                       },
                     }
                   )
