@@ -595,70 +595,76 @@ export default function Home({ isConnected }) {
               alignItems="center"
             >
               {userInfo.players.map((d) => {
-                return (
-                  <Grid item>
-                    <Paper
-                      elevation={1}
-                      style={{
-                        width: "200px",
-                        overflow: "auto",
-                        margin: "5px 5px 5px 5px",
-                      }}
-                    >
-                      <IconButton
-                        sx={{
-                          borderRadius: 0,
-                          width: "100%",
-                          height: "100%",
-                        }}
-                        color={
-                          JSON.stringify(d) ==
-                          JSON.stringify(currentlySelectedHitter)
-                            ? "primary"
-                            : "inherit"
-                        }
-                        onClick={() => {
-                          setCurrentHitter(d);
+                if (
+                  !userInfo.lineup
+                    .map((s) => JSON.stringify(s))
+                    .some((s) => s == JSON.stringify(d))
+                ) {
+                  return (
+                    <Grid item>
+                      <Paper
+                        elevation={1}
+                        style={{
+                          width: "200px",
+                          overflow: "auto",
+                          margin: "5px 5px 5px 5px",
                         }}
                       >
-                        <Grid
-                          container
-                          direction="column"
-                          justifyContent="center"
-                          alignItems="center"
+                        <IconButton
+                          sx={{
+                            borderRadius: 0,
+                            width: "100%",
+                            height: "100%",
+                          }}
+                          color={
+                            JSON.stringify(d) ==
+                            JSON.stringify(currentlySelectedHitter)
+                              ? "primary"
+                              : "inherit"
+                          }
+                          onClick={() => {
+                            setCurrentHitter(d);
+                          }}
                         >
-                          <Grid item>
-                            <Typography sx={{ mb: 1.5 }}>
-                              <strong>
-                                {d.name} - {d.position}
-                              </strong>
-                            </Typography>
+                          <Grid
+                            container
+                            direction="column"
+                            justifyContent="center"
+                            alignItems="center"
+                          >
+                            <Grid item>
+                              <Typography sx={{ mb: 1.5 }}>
+                                <strong>
+                                  {d.name} - {d.position}
+                                </strong>
+                              </Typography>
+                            </Grid>
+                            <Grid item>
+                              <Typography>
+                                Fielding score:
+                                {d.fieldCom >= 25 ? (
+                                  <span id="fire-text"> {d.fieldCom}</span>
+                                ) : (
+                                  <> {d.fieldCom}</>
+                                )}
+                              </Typography>
+                            </Grid>
+                            <Grid item>
+                              <Typography>
+                                Strength:{" "}
+                                {d.strength >= 25 ? (
+                                  <span id="fire-text"> {d.strength}</span>
+                                ) : (
+                                  <> {d.strength}</>
+                                )}
+                              </Typography>
+                            </Grid>{" "}
                           </Grid>
-                          <Grid item>
-                            <Typography>
-                              Fielding score:
-                              {d.fieldCom >= 25 ? (
-                                <span id="fire-text"> {d.fieldCom}</span>
-                              ) : (
-                                <> {d.fieldCom}</>
-                              )}
-                            </Typography>
-                          </Grid>
-                          <Grid item>
-                            <Typography>
-                              Strength:{" "}
-                              {d.strength >= 25 ? (
-                                <span id="fire-text"> {d.strength}</span>
-                              ) : (
-                                <> {d.strength}</>
-                              )}
-                            </Typography>
-                          </Grid>{" "}
-                        </Grid>
-                      </IconButton>
-                    </Paper>
-                  </Grid>
-                );
+                        </IconButton>
+                      </Paper>
+                    </Grid>
+                  );
+                }
               })}
             </Grid>
           </DialogContent>

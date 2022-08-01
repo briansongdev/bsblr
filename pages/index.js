@@ -1176,6 +1176,9 @@ export default function Home({ isConnected }) {
             <Button onClick={handleClose1}>Cancel</Button>
           </DialogActions>
         </Dialog>
+        {/* <Dialog fullScreen>
+          Tutorial
+        </Dialog> */}
       </>
     );
   }
