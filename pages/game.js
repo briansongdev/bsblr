@@ -133,29 +133,6 @@ export default function Game({ isConnected }) {
                       }
                     });
                   if (res1.data.countdown == 0) {
-                    let sound1 = new Howl({
-                      src: [
-                        "https://assets.mixkit.co/sfx/preview/mixkit-retro-game-notification-212.mp3",
-                      ],
-                      html5: true,
-                      volume: 0.1,
-                    });
-                    let sound2 = new Howl({
-                      src: [
-                        "https://assets.mixkit.co/sfx/preview/mixkit-coin-win-notification-1992.mp3",
-                      ],
-                      html5: true,
-                      volume: 0.1,
-                    });
-                    if (
-                      res1.data.feedback.includes("homer") ||
-                      res1.data.feedback.includes("double") ||
-                      res1.data.feedback.includes("triple")
-                    ) {
-                      sound2.play();
-                    } else {
-                      sound1.play();
-                    }
                     setGuess(-1);
                     setMessage("");
                     await axios
@@ -168,6 +145,29 @@ export default function Game({ isConnected }) {
                       })
                       .then(async (res3) => {
                         setGameInfo(res3.data);
+                        let sound1 = new Howl({
+                          src: [
+                            "https://assets.mixkit.co/sfx/preview/mixkit-retro-game-notification-212.mp3",
+                          ],
+                          html5: true,
+                          volume: 0.1,
+                        });
+                        let sound2 = new Howl({
+                          src: [
+                            "https://assets.mixkit.co/sfx/preview/mixkit-coin-win-notification-1992.mp3",
+                          ],
+                          html5: true,
+                          volume: 0.1,
+                        });
+                        if (
+                          res3.data.feedback.includes("homer") ||
+                          res3.data.feedback.includes("double") ||
+                          res3.data.feedback.includes("triple")
+                        ) {
+                          sound2.play();
+                        } else {
+                          sound1.play();
+                        }
                       });
                   }
                 });
@@ -533,7 +533,7 @@ export default function Game({ isConnected }) {
                     <Grid item xs={6}>
                       <Typography gutterBottom>
                         <span style={{ fontWeight: "bold", fontSize: "30px" }}>
-                          You are pitching!
+                        You are now <span style={{color: "green"}}>pitching</span>!
                         </span>
                         <br />
                         <br />
@@ -607,7 +607,7 @@ export default function Game({ isConnected }) {
                     <Grid item xs={6}>
                       <Typography gutterBottom>
                         <span style={{ fontWeight: "bold", fontSize: "30px" }}>
-                          You are hitting!
+                          You are now <span style={{color: "red"}}>hitting</span>!
                         </span>
                         <br />
                         <br />
@@ -685,7 +685,7 @@ export default function Game({ isConnected }) {
                     <Grid item xs={6}>
                       <Typography gutterBottom>
                         <span style={{ fontWeight: "bold", fontSize: "30px" }}>
-                          You are pitching!
+                        You are now <span style={{color: "green"}}>pitching</span>!
                         </span>
                         <br />
                         <br />
@@ -759,7 +759,7 @@ export default function Game({ isConnected }) {
                     <Grid item xs={6}>
                       <Typography gutterBottom>
                         <span style={{ fontWeight: "bold", fontSize: "30px" }}>
-                          You are hitting!
+                        You are now <span style={{color: "red"}}>hitting</span>!
                         </span>
                         <br />
                         <br />
