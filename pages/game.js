@@ -93,25 +93,31 @@ export default function Game({ isConnected }) {
                   setGameInfo(res1.data);
                   currGame = res1.data;
                   setTimer(res1.data.countdown);
-                  if (res.data.username == res1.data.player1 || otherAFK) {
+                  if (
+                    res.data.username == res1.data.player1 ||
+                    (otherAFK && gameInfo.outs != 3)
+                  ) {
                     // subtract 1 to time every second
-                    await axios.post("/api/time", {
-                      email: res.data.email,
-                      password: res.data.password,
-                      gameid: res.data.currentMatch,
-                    });
-                  }
-                  if (otherAFK) {
                     await axios
-                      .get("/api/game", {
-                        headers: {
-                          email: res.data.email,
-                          password: res.data.password,
-                          gameid: res.data.currentMatch,
-                        },
+                      .post("/api/time", {
+                        email: res.data.email,
+                        password: res.data.password,
+                        gameid: res.data.currentMatch,
                       })
-                      .then((sdadla) => {
-                        setTimer(sdadla.data.countdown);
+                      .then(async () => {
+                        if (otherAFK) {
+                          await axios
+                            .get("/api/game", {
+                              headers: {
+                                email: res.data.email,
+                                password: res.data.password,
+                                gameid: res.data.currentMatch,
+                              },
+                            })
+                            .then((sdadla) => {
+                              setTimer(sdadla.data.countdown);
+                            });
+                        }
                       });
                   }
                   await axios
@@ -134,7 +140,22 @@ export default function Game({ isConnected }) {
                       html5: true,
                       volume: 0.1,
                     });
-                    sound1.play();
+                    let sound2 = new Howl({
+                      src: [
+                        "https://assets.mixkit.co/sfx/preview/mixkit-coin-win-notification-1992.mp3",
+                      ],
+                      html5: true,
+                      volume: 0.1,
+                    });
+                    if (
+                      res1.data.feedback.includes("homer") ||
+                      res1.data.feedback.includes("double") ||
+                      res1.data.feedback.includes("triple")
+                    ) {
+                      sound2.play();
+                    } else {
+                      sound1.play();
+                    }
                     setGuess(-1);
                     setMessage("");
                     await axios
@@ -893,7 +914,7 @@ export default function Game({ isConnected }) {
                             gameInfo.p1batters.length
                         ].strength > 25
                           ? "A surefire power hitter."
-                          : "Utility, contact man who can set up productive innings."}
+                          : "Utility, contact man who can set up productive innings."}{" "}
                       </Typography>
                     </CardContent>
                   </Card>

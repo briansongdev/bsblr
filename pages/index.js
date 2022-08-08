@@ -165,6 +165,7 @@ export default function Home({ isConnected }) {
   const [addFriendVal, setFriendVal] = useState("");
   const [open, setOpen] = useState(false);
   const [open1, setOpen1] = useState(false);
+  const [tutOpen, setTutOpen] = useState(false);
   const handleClose = async () => {
     setOpen(false);
     await axios
@@ -1028,7 +1029,7 @@ export default function Home({ isConnected }) {
               <Button
                 variant="outlined"
                 sx={{ width: "100%", borderRadius: "15px", mt: 2 }}
-                onClick={() => alert("Coming soon!")}
+                onClick={() => setTutOpen(true)}
               >
                 Tutorial
               </Button>
@@ -1176,9 +1177,13 @@ export default function Home({ isConnected }) {
             <Button onClick={handleClose1}>Cancel</Button>
           </DialogActions>
         </Dialog>
-        {/* <Dialog fullScreen>
-          Tutorial
-        </Dialog> */}
+        <Dialog fullScreen open={tutOpen}>
+          <DialogTitle>Hi</DialogTitle>
+          <DialogContent>
+            <DialogContentText>Tutorial</DialogContentText>
+          </DialogContent>
+          <DialogActions></DialogActions>
+        </Dialog>
       </>
     );
   }
