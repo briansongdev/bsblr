@@ -115,6 +115,7 @@ export default function Game({ isConnected }) {
                               },
                             })
                             .then((sdadla) => {
+                              setGameInfo(sdadla.data);
                               setTimer(sdadla.data.countdown);
                             });
                         }
@@ -144,6 +145,15 @@ export default function Game({ isConnected }) {
                         },
                       })
                       .then(async (res3) => {
+                        let newRuns;
+                        if (
+                          res3.data.p1runs > gameInfo.p1runs ||
+                          res3.data.p2runs > gameInfo.p2runs
+                        ) {
+                          newRuns = true;
+                        } else {
+                          newRuns = false;
+                        }
                         setGameInfo(res3.data);
                         let sound1 = new Howl({
                           src: [
@@ -159,11 +169,7 @@ export default function Game({ isConnected }) {
                           html5: true,
                           volume: 0.1,
                         });
-                        if (
-                          res3.data.feedback.includes("homer") ||
-                          res3.data.feedback.includes("double") ||
-                          res3.data.feedback.includes("triple")
-                        ) {
+                        if (newRuns) {
                           sound2.play();
                         } else {
                           sound1.play();
@@ -429,21 +435,12 @@ export default function Game({ isConnected }) {
                         <strong>Past velocities and guesses:</strong>
                       </Typography>
                       {gameInfo.pastFewPitches
-                        .filter(
-                          (value, index, self) =>
-                            index ===
-                            self.findIndex(
-                              (t) =>
-                                t.guess1 === value.guess1 &&
-                                t.guess2 === value.guess2
-                            )
-                        )
                         .slice()
                         .reverse()
                         .map((asl) => {
                           return (
                             <Typography>
-                              {asl.guess1 == -500 || asl.guess2 == 500 ? (
+                              {asl.guess1 == -500 || asl.guess2 == -500 ? (
                                 <>One player did not guess.</>
                               ) : (
                                 <>
@@ -496,21 +493,12 @@ export default function Game({ isConnected }) {
                         <strong>Past velocities and guesses:</strong>
                       </Typography>
                       {gameInfo.pastFewPitches
-                        .filter(
-                          (value, index, self) =>
-                            index ===
-                            self.findIndex(
-                              (t) =>
-                                t.guess1 === value.guess1 &&
-                                t.guess2 === value.guess2
-                            )
-                        )
                         .slice()
                         .reverse()
                         .map((asl) => {
                           return (
                             <Typography>
-                              {asl.guess1 == -500 || asl.guess2 == 500 ? (
+                              {asl.guess1 == -500 || asl.guess2 == -500 ? (
                                 <>One player did not guess.</>
                               ) : (
                                 <>
@@ -533,7 +521,8 @@ export default function Game({ isConnected }) {
                     <Grid item xs={6}>
                       <Typography gutterBottom>
                         <span style={{ fontWeight: "bold", fontSize: "30px" }}>
-                        You are now <span style={{color: "green"}}>pitching</span>!
+                          You are now{" "}
+                          <span style={{ color: "green" }}>pitching</span>!
                         </span>
                         <br />
                         <br />
@@ -607,7 +596,8 @@ export default function Game({ isConnected }) {
                     <Grid item xs={6}>
                       <Typography gutterBottom>
                         <span style={{ fontWeight: "bold", fontSize: "30px" }}>
-                          You are now <span style={{color: "red"}}>hitting</span>!
+                          You are now{" "}
+                          <span style={{ color: "red" }}>hitting</span>!
                         </span>
                         <br />
                         <br />
@@ -685,7 +675,8 @@ export default function Game({ isConnected }) {
                     <Grid item xs={6}>
                       <Typography gutterBottom>
                         <span style={{ fontWeight: "bold", fontSize: "30px" }}>
-                        You are now <span style={{color: "green"}}>pitching</span>!
+                          You are now{" "}
+                          <span style={{ color: "green" }}>pitching</span>!
                         </span>
                         <br />
                         <br />
@@ -759,7 +750,8 @@ export default function Game({ isConnected }) {
                     <Grid item xs={6}>
                       <Typography gutterBottom>
                         <span style={{ fontWeight: "bold", fontSize: "30px" }}>
-                        You are now <span style={{color: "red"}}>hitting</span>!
+                          You are now{" "}
+                          <span style={{ color: "red" }}>hitting</span>!
                         </span>
                         <br />
                         <br />
