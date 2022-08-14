@@ -40,6 +40,7 @@ export default function Game({ isConnected }) {
         })
         .then(async (res) => {
           if (res.data.currentMatch == "") {
+            alert("Game has ended!");
             router.push("/");
           }
           setCurrentM(res.data.currentMatch);
@@ -75,6 +76,7 @@ export default function Game({ isConnected }) {
             let myInt = setInterval(async () => {
               if (res.data.currentMatch == "") {
                 clearInterval(myInt);
+                alert("Game has ended!");
                 router.push("/");
               }
               let otherAFK = false;
@@ -130,6 +132,7 @@ export default function Game({ isConnected }) {
                     .then((res2) => {
                       if (res2.data.currentMatch == "") {
                         clearInterval(myInt);
+                        alert("Game has ended!");
                         router.push("/");
                       }
                     });
