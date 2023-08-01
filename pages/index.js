@@ -206,6 +206,7 @@ export default function Home({ isConnected }) {
         }
       });
   };
+  const handleClose2 = () => setTutOpen(false);
 
   const refreshForMatchFriend = (friendToken) => {
     const checkI = setTimeout(async () => {
@@ -1178,12 +1179,38 @@ export default function Home({ isConnected }) {
             <Button onClick={handleClose1}>Cancel</Button>
           </DialogActions>
         </Dialog>
-        <Dialog fullScreen open={tutOpen}>
-          <DialogTitle>Hi</DialogTitle>
+        <Dialog open={tutOpen}>
+          <DialogTitle>Tutorial: Welcome to BSBLR!</DialogTitle>
           <DialogContent>
-            <DialogContentText>Tutorial</DialogContentText>
+            <DialogContentText>
+              Acquire players from the shop, using credits that you can obtain
+              from daily logins.
+            </DialogContentText>
+            <br />
+            <DialogContentText>
+              Assign these players to your team and battle it up 1v1 with other
+              players from around the world or around your rank.
+            </DialogContentText>
+            <br />
+            <DialogContentText>
+              In every inning, the outcome of your batters and pitchers comes
+              down to how close the batter's guess of the velocity of the
+              pitcher's pitch is.
+            </DialogContentText>
+            <br />
+            <DialogContentText>
+              However, having a stronger pitcher or a better hitter DOES make a
+              difference!
+            </DialogContentText>
+            <br />
+            <DialogContentText>
+              Pull some players, try it out and see for yourself by BSBLR is the
+              best game for baseball out there.
+            </DialogContentText>
           </DialogContent>
-          <DialogActions></DialogActions>
+          <DialogActions>
+            <Button onClick={handleClose2}>Got it!</Button>
+          </DialogActions>
         </Dialog>
       </>
     );
