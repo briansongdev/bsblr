@@ -22,6 +22,7 @@ import {
   DialogActions,
   Paper,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import { useRouter } from "next/router";
 
@@ -122,6 +123,7 @@ export default function Home({ isConnected }) {
         <Container>
           {" "}
           <Typography variant="h3">BSBLR</Typography>
+          <CircularProgress />
         </Container>
       </>
     );

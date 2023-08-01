@@ -105,6 +105,7 @@ export default function Home({ isConnected }) {
         <Container>
           {" "}
           <Typography variant="h3">BSBLR</Typography>
+          <CircularProgress />
         </Container>
       </>
     );
